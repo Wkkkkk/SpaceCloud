@@ -18,7 +18,6 @@
 */
 #include <utility>
 #include <stdio.h>
-#include <unistd.h>
 
 #include <QtGui/QIcon>
 #include <QtGui/QKeyEvent>

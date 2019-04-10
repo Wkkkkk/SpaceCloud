@@ -252,14 +252,6 @@ osgGA::EventQueue *OSGWidget::getEventQueue() const {
     }
 }
 
-void OSGWidget::addEventHandler(osgGA::GUIEventHandler *handler) {
-    _viewer->addEventHandler(handler);
-}
-
-void OSGWidget::removeEventHandler(osgGA::GUIEventHandler *handler) {
-    _viewer->removeEventHandler(handler);
-}
-
 void OSGWidget::paintEvent(QPaintEvent * /* paintEvent */) {
     this->makeCurrent();
 

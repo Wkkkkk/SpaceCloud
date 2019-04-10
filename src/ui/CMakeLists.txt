@@ -16,7 +16,7 @@ add_custom_target(copy_ts
 
 add_custom_target(copy_model
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_CURRENT_SOURCE_DIR}/model/* ${EXECUTABLE_OUTPUT_PATH}/model/
+        ${CMAKE_CURRENT_SOURCE_DIR}/model/cow.osg ${EXECUTABLE_OUTPUT_PATH}/model/cow.osg
         )
 
 add_custom_target(copy_images
@@ -34,7 +34,11 @@ add_custom_target(copy_fonts
         ${CMAKE_CURRENT_SOURCE_DIR}/fonts/arial.ttf ${EXECUTABLE_OUTPUT_PATH}/fonts/arial.ttf
         )
 
-add_executable(${PROJECT_NAME} ${SOURCES_CXX})
+IF (WIN32)
+    set(PLATFORM WIN32)
+ENDIF ()
+
+add_executable(${PROJECT_NAME} ${PLATFORM} ${SOURCES_CXX})
 add_dependencies(${PROJECT_NAME} copy_ts copy_model copy_images copy_manual copy_fonts)
 
 target_link_libraries(${PROJECT_NAME} core render)

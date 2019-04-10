@@ -58,25 +58,15 @@ RUN git clone https://github.com/gwaldron/osgearth.git && \
     cd osgearth && mkdir build && cd build \
     && cmake -DOSGEARTH_USE_QT=ON .. && make -j6 && make install
 
-#draco 1.3.5
-RUN git clone https://github.com/google/draco.git && \
-    cd draco && mkdir build && cd build \
-    && cmake .. && make -j6 && make install
-
-#muduo
-RUN git clone https://github.com/chenshuo/muduo.git && \
-    cd muduo && mkdir build && cd build \
-    && cmake .. && make -j6 && make install
-
 #self
 WORKDIR /home/zhihui/workspace
-RUN git clone https://github.com/Wkkkkk/SLAMMapping.git && \
-    cd SLAMMapping && mkdir build && cd build \
+RUN git clone https://github.com/Wkkkkk/SpaceCloud.git && \
+    cd SpaceCloud && mkdir build && cd build \
     && cmake .. && make -j6
 
 ##################################################
 #pack here
-ENV des=/home/zhihui/workspace/SLAMMapping/bin
+ENV des=/home/zhihui/workspace/SpaceCloud/bin
 ENV client_exe=$des/client
 ENV server_exe=$des/server
 RUN deplist=$(ldd $client_exe | awk  '{if (match($3,"/")){ printf("%s "),$3 } }') && \
@@ -97,7 +87,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     qttools5-dev-tools \
     libqt5opengl5-dev
 
-ENV bin_path=/home/zhihui/workspace/SLAMMapping/bin/
+ENV bin_path=/home/zhihui/workspace/SpaceCloud/bin/
 RUN mkdir -p $bin_path
 COPY --from=builder /home/zhihui/workspace/*.tar.gz /home/zhihui/workspace/
 
@@ -108,7 +98,6 @@ RUN tar -xzvf /home/zhihui/workspace/osgPlugins.tar.gz -C $bin_path
 #some fixed environment variables
 ENV LD_LIBRARY_PATH=/usr/local/lib64:$bin_path
 
-CMD $bin_path/client
-EXPOSE 2000
+CMD $bin_path/SpaceCloud
 
 

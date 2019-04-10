@@ -50,10 +50,6 @@ public:
 
     void readDataFromFile(const QFileInfo &file_path);
 
-    void addEventHandler(osgGA::GUIEventHandler *handler);
-
-    void removeEventHandler(osgGA::GUIEventHandler *handler);
-
     //!inherit from QOpenGLWidget
     virtual void keyPressEvent(QKeyEvent *event);
 
