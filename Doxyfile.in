@@ -1,0 +1,20 @@
+DOXYFILE_ENCODING      = UTF-8
+PROJECT_NAME           = "${CMAKE_PROJECT_NAME}"
+PROJECT_NUMBER         = ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+STRIP_FROM_PATH        = ${PROJECT_SOURCE_DIR} \
+                         ${PROJECT_BINARY_DIR}
+INPUT                  = ${doxy_main_page} \
+                         ${PROJECT_SOURCE_DIR}
+OUTPUT_LANGUAGE        = Chinese
+OUTPUT_DIRECTORY       = ${PROJECT_SOURCE_DIR}/doc
+FILE_PATTERNS          = *.h \
+                         *.cpp
+RECURSIVE              = YES
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+USE_MDFILE_AS_MAINPAGE = ${doxy_main_page}
+EXCLUDE                = ${PROJECT_BINARY_DIR} \
+                         ${PROJECT_SOURCE_DIR}/doc \
+                         ${PROJECT_SOURCE_DIR}/debug
+EXCLUDE_PATTERNS       = *.xpp
