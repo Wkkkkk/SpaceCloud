@@ -2,8 +2,19 @@ cmake_minimum_required(VERSION 3.5)
 project(SpaceCloud)
 set(CMAKE_CXX_STANDARD 14)
 
+#output setting
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+
+#find 3rdparty
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+message(STATUS "CMAKE_PREFIX_PATH:$ENV{CMAKE_PREFIX_PATH}")
+message(STATUS "LD_LIBRARY_PATH:$ENV{LD_LIBRARY_PATH}")
+message(STATUS "VCPKG_DIR:$ENV{VCPKG_DIR}")
+
 IF (UNIX)
-    set(CMAKE_PREFIX_PATH /usr/local/lib64:/usr/local/Qt-5.11.1/lib)
+    set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH}:/usr/local/Qt-5.11.1/lib")  # for local Qt5.11
+
     set(CXX_FLAGS
             -g
             -Wall
@@ -23,32 +34,30 @@ IF (UNIX)
     set(CMAKE_CXX_FLAGS_DEBUG "-O0")
     set(CMAKE_CXX_FLAGS_RELEASE "-O2 -finline-limit=1000 -DNDEBUG")
 
-    find_package(Doxygen)
-    option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" ${DOXYGEN_FOUND})
+    option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation")
     IF (BUILD_DOCUMENTATION)
-        IF (NOT DOXYGEN_FOUND)
-            MESSAGE(FATAL_ERROR "Doxygen is needed to build the documentation.")
-        ENDIF ()
+        include(UseBreathe)
 
-        SET(doxyfile_in ${PROJECT_SOURCE_DIR}/Doxyfile.in)
-        SET(doxyfile ${PROJECT_BINARY_DIR}/Doxyfile)
-
-        # copy and replace the variables
-        configure_file(${doxyfile_in} ${doxyfile})
-
-        # use doxygen to generate the doc
-        add_custom_target(doc
-                COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
-                WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-                COMMENT "Generating API documentation with Doxygen"
-                VERBATIM)
-
-        #INSTALL(DIRECTORY ${PROJECT_BINARY_DIR}/html DESTINATION share/doc)
+        add_breathe_doc(
+                SOURCE_DIR
+                ${CMAKE_CURRENT_SOURCE_DIR}/docs
+                BUILD_DIR
+                ${CMAKE_CURRENT_BINARY_DIR}/_build
+                CACHE_DIR
+                ${CMAKE_CURRENT_BINARY_DIR}/_doctrees
+                HTML_DIR
+                ${CMAKE_CURRENT_BINARY_DIR}/html
+                DOXY_FILE
+                ${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in
+                CONF_FILE
+                ${CMAKE_CURRENT_SOURCE_DIR}/docs/conf.py.in
+                TARGET_NAME
+                docs
+                COMMENT
+                "HTML documentation"
+        )
     ENDIF ()
 ENDIF ()
-
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 find_package(Qt5LinguistTools)
 find_package(Qt5Core REQUIRED)
