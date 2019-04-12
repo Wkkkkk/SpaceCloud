@@ -1,16 +1,22 @@
 cmake_minimum_required(VERSION 3.5)
 project(SpaceCloud)
 set(CMAKE_CXX_STANDARD 14)
-
-#output setting
+set(CMAKE_BUILD_TYPE Release CACHE STRING "set build type to Release")
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+set(COPY_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH})
 #set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+
+#output setting for windows compatibility
+IF (WIN32)
+    set(COPY_OUTPUT_PATH ${COPY_OUTPUT_PATH}/${CMAKE_BUILD_TYPE}/)
+ENDIF ()
 
 #find 3rdparty
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 message(STATUS "CMAKE_PREFIX_PATH:$ENV{CMAKE_PREFIX_PATH}")
 message(STATUS "LD_LIBRARY_PATH:$ENV{LD_LIBRARY_PATH}")
 message(STATUS "VCPKG_DIR:$ENV{VCPKG_DIR}")
+message(STATUS "EXECUTABLE_OUTPUT_PATH :${EXECUTABLE_OUTPUT_PATH}")
 
 IF (UNIX)
     set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH}:/usr/local/Qt-5.11.1/lib")  # for local Qt5.11

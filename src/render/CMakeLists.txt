@@ -13,6 +13,6 @@ link_directories(${OPENSCENEGRAPH_LIBRARY_DIRS})
 add_library(${PROJECT_NAME} ${SOURCES_CXX})
 target_link_libraries(${PROJECT_NAME}
         ${OPENSCENEGRAPH_LIBRARIES}
-        ${OSGEarth_LIBRARIES}
+        ${OSGEARTH_LIBRARIES}
         )
 qt5_use_modules(${PROJECT_NAME} Sql Gui Widgets OpenGL Network Concurrent)

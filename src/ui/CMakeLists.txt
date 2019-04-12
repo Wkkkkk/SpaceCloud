@@ -11,27 +11,27 @@ add_custom_target(translations
 
 add_custom_target(copy_ts
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${TRANSLATION_QM} ${EXECUTABLE_OUTPUT_PATH}/tr/lpd_zh.qm
+        ${TRANSLATION_QM} ${COPY_OUTPUT_PATH}/tr/lpd_zh.qm
         DEPENDS ${TRANSLATION_QM})
 
 add_custom_target(copy_model
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_CURRENT_SOURCE_DIR}/model/cow.osg ${EXECUTABLE_OUTPUT_PATH}/model/cow.osg
+        ${CMAKE_CURRENT_SOURCE_DIR}/model/cow.osg ${COPY_OUTPUT_PATH}/model/cow.osg
         )
 
 add_custom_target(copy_images
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_CURRENT_SOURCE_DIR}/images/reflect.rgb ${EXECUTABLE_OUTPUT_PATH}/model/Images/reflect.rgb
+        ${CMAKE_CURRENT_SOURCE_DIR}/images/reflect.rgb ${COPY_OUTPUT_PATH}/model/Images/reflect.rgb
         )
 
 add_custom_target(copy_manual
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_CURRENT_SOURCE_DIR}/Manual.pdf ${EXECUTABLE_OUTPUT_PATH}/Manual.pdf
+        ${CMAKE_CURRENT_SOURCE_DIR}/Manual.pdf ${COPY_OUTPUT_PATH}/Manual.pdf
         )
 
 add_custom_target(copy_fonts
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_CURRENT_SOURCE_DIR}/fonts/arial.ttf ${EXECUTABLE_OUTPUT_PATH}/fonts/arial.ttf
+        ${CMAKE_CURRENT_SOURCE_DIR}/fonts/arial.ttf ${COPY_OUTPUT_PATH}/fonts/arial.ttf
         )
 
 IF (WIN32)
