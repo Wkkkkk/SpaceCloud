@@ -36,6 +36,17 @@
 #include <osgViewer/ViewerEventHandlers>
 #include <osgDB/ReadFile>
 
+#include <osgEarth/ImageLayer>
+#include <osgEarthUtil/Sky>
+#include <osgEarthUtil/ObjectLocator>
+#include <osgEarthUtil/EarthManipulator>
+#include <osgEarthUtil/LogarithmicDepthBuffer>
+
+#include <osgEarthFeatures/FeatureModelLayer>
+#include <osgEarthDrivers/gdal/GDALOptions>
+#include <osgEarthDrivers/feature_ogr/OGRFeatureOptions>
+#include <osgEarthDrivers/agglite/AGGLiteOptions>
+
 #include "Common.h"
 #include "OSGWidget.h"
 #include "Singleton.h"
@@ -45,17 +56,19 @@
 
 using namespace osgHelper;
 
+using namespace osgEarth;
+using namespace osgEarth::Drivers;
+using namespace osgEarth::Features;
+
 OSGWidget::OSGWidget(QWidget *parent, Qt::WindowFlags f)
         : QOpenGLWidget(parent, f),
-          _graphicsWindow(new osgViewer::GraphicsWindowEmbedded(this->x(), this->y(), this->width(), this->height())),
-          _viewer(nullptr),
-          root_node_(nullptr),
-          text_node_(nullptr) {
+          graphics_window_(new osgViewer::GraphicsWindowEmbedded(this->x(), this->y(), this->width(), this->height())) {
+
 }
 
 void OSGWidget::init() {
     initSceneGraph();
-    initHelperNode();
+//    initHelperNode();
     initCamera();
 
     startTimer(1000 / 60.f);  // 60hz
@@ -65,23 +78,42 @@ void OSGWidget::initSceneGraph() {
     root_node_ = new osg::Group;
     root_node_->setName(root_node_name);
 
-    osg::ref_ptr<osg::Switch> point_cloud_node = new osg::Switch;
-    point_cloud_node->setName(point_cloud_node_name);
-    root_node_->addChild(point_cloud_node);
+    //earth
+    std::string earth_file = "./earth/gisms.earth";
+    osg::ref_ptr<osg::Node> node = osgDB::readNodeFile(earth_file);
+    map_node_ = osgEarth::MapNode::findMapNode(node.get());
+    map_node_->setName(earth_node_name);
 
-    osg::ref_ptr<osg::PositionAttitudeTransform> ori_node = new osg::PositionAttitudeTransform;
-    ori_node->setName(ori_node_name);
-    {
-        osg::ref_ptr<osg::Geode> geode = new osg::Geode;
-        geode->setName("origin");
+    //sky----the only entrance of the whole scene node tree!
+    osg::ref_ptr<osgEarth::Util::SkyNode> sky_node = osgEarth::Util::SkyNode::create(map_node_.get());
+    sky_node->setName("sky_node");
+    sky_node->setDateTime(osgEarth::DateTime(2019, 2, 4, 16));
+    osg::ref_ptr<osgEarth::Util::Ephemeris> ephemeris = new osgEarth::Util::Ephemeris;
+    sky_node->setEphemeris(ephemeris.get());
+    sky_node->attach(viewer_, 0);
+    sky_node->setLighting(true);
+    sky_node->getSunLight()->setAmbient(osg::Vec4(0.2, 0.2, 0.2, 0.0));
+    sky_node->addChild(map_node_.get());
+    root_node_->addChild(sky_node);
 
-        osg::ref_ptr<osg::ShapeDrawable> point_sphere = new osg::ShapeDrawable(new osg::Sphere(osg::Vec3d(), 0.5f));
-        point_sphere->setColor(osg::Vec4(1.0, 1.0, 0.0, 1.0));
-        geode->addDrawable(point_sphere);
+    const osgEarth::SpatialReference *wgs84 = osgEarth::SpatialReference::get("wgs84");
+    const osgEarth::SpatialReference *utm15 = osgEarth::SpatialReference::get(
+            "+proj=utm +zone=15 +ellps=GRS80 +units=m");
 
-        ori_node->addChild(geode);
+    osgEarth::GeoPoint wgsPoint(wgs84, -93.0, 34.0);
+    osgEarth::GeoPoint utmPoint = wgsPoint.transform(utm15);
+
+    if (utmPoint.isValid()) {
+        std::cout << "utm:" << utmPoint.toString() << std::endl;
     }
-    root_node_->addChild(ori_node);
+    // do something
+
+    //locator
+//    osg::ref_ptr<osgEarth::Util::ObjectLocatorNode> locator = new osgEarth::Util::ObjectLocatorNode(map_node_->getMap());
+//    locator->setName("locator");
+//    locator->getLocator()->setPosition(osg::Vec3d(ground_center_location.y(), ground_center_location.x(), ground_center_location.z() + 1.8));
+//    sky_node->addChild(locator);
+
 
     osg::ref_ptr<osg::Camera> hud_node = createHUD();
     hud_node->setName(hud_node_name);
@@ -92,20 +124,20 @@ void OSGWidget::initSceneGraph() {
     }
     root_node_->addChild(hud_node);
 
-    osg::ref_ptr<osg::Switch> helper_node = new osg::Switch;
-    helper_node->setName(helper_node_name);
-    root_node_->addChild(helper_node);
+//    osg::ref_ptr<osg::Switch> helper_node = new osg::Switch;
+//    helper_node->setName(helper_node_name);
+//    root_node_->addChild(helper_node);
 }
 
 void OSGWidget::initCamera() {
-    _viewer = new osgViewer::Viewer;
+    viewer_ = new osgViewer::Viewer;
 
     float aspectRatio = static_cast<float>(this->width()) / static_cast<float>(this->height());
-    osg::ref_ptr<osg::Camera> camera = _viewer->getCamera();
+    osg::ref_ptr<osg::Camera> camera = viewer_->getCamera();
     camera->setViewport(0, 0, this->width(), this->height());
-    //    camera->setClearColor(osg::Vec4(0.2, 0.2, 0.6, 1.0));
+    camera->setClearColor(osg::Vec4(0., 0., 0., 1.0));
     camera->setProjectionMatrixAsPerspective(30.f, aspectRatio, 1.f, 10000.f);
-    camera->setGraphicsContext(_graphicsWindow);
+    camera->setGraphicsContext(graphics_window_);
     camera->getOrCreateStateSet()->setMode(GL_DEPTH_TEST, osg::StateAttribute::OVERRIDE | osg::StateAttribute::ON);
     camera->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     camera->setClearMask(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
@@ -114,11 +146,14 @@ void OSGWidget::initCamera() {
                                              1.0, 1000.0);
     camera->setNearFarRatio(0.0000002);
     camera->setComputeNearFarMode(osg::CullSettings::COMPUTE_NEAR_FAR_USING_BOUNDING_VOLUMES);
-//    camera->setClearColor(osg::Vec4(0.84313, 0.84313, 0.89804, 1.0));
 
-    _viewer->addEventHandler(new osgViewer::StatsHandler);
-    _viewer->addEventHandler(new osgGA::StateSetManipulator(camera->getStateSet()));
-    _viewer->addEventHandler(new NodeTreeHandler(root_node_));
+    viewer_->addEventHandler(new osgViewer::StatsHandler);
+    viewer_->addEventHandler(new osgGA::StateSetManipulator(camera->getStateSet()));
+
+    viewer_->addEventHandler(new NodeTreeHandler(root_node_));
+
+    osgEarth::Util::LogarithmicDepthBuffer logdepth;
+    logdepth.install(camera);
 
     //for outline effects
     {
@@ -128,17 +163,13 @@ void OSGWidget::initCamera() {
         camera->setClearStencil(0);
     }
 
-    _terrainMani = new osgGA::TerrainManipulator;
-    _terrainMani->setAllowThrow(false);
-    _terrainMani->setAutoComputeHomePosition(true);
+    earth_mani_ = new osgEarth::Util::EarthManipulator;
+    earth_mani_->setHomeViewpoint(osgEarth::Viewpoint("", 114.676, 34.1278, -700, 0, -90, 1.823e+07));
+//    earth_mani_->setHomeViewpoint(osgEarth::Viewpoint("", -71.076262, 42.34425, 0, 24.261, -21.6, 100));
+    viewer_->setCameraManipulator(earth_mani_);
 
-    _trackballMani = new osgGA::TrackballManipulator;
-    _trackballMani->setAllowThrow(false);
-    _trackballMani->setVerticalAxisFixed(true);
-    _viewer->setCameraManipulator(_trackballMani.get());
-
-    _viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
-    _viewer->setSceneData(root_node_);
+    viewer_->setThreadingModel(osgViewer::Viewer::SingleThreaded);
+    viewer_->setSceneData(root_node_);
 }
 
 void OSGWidget::initHelperNode() {
@@ -243,7 +274,7 @@ osg::Geode *OSGWidget::calculateBBoxForModel(osg::Node *node) const {
 }
 
 osgGA::EventQueue *OSGWidget::getEventQueue() const {
-    osgGA::EventQueue *eventQueue = _graphicsWindow->getEventQueue();
+    osgGA::EventQueue *eventQueue = graphics_window_->getEventQueue();
 
     if (eventQueue) {
         return eventQueue;
@@ -266,16 +297,16 @@ void OSGWidget::paintEvent(QPaintEvent * /* paintEvent */) {
 }
 
 void OSGWidget::paintGL() {
-    _viewer->frame();
+    viewer_->frame();
 }
 
 void OSGWidget::onResize(int width, int height) {
-    _viewer->getCamera()->setViewport(0, 0, this->width(), this->height());
+    viewer_->getCamera()->setViewport(0, 0, this->width(), this->height());
 }
 
 void OSGWidget::resizeGL(int width, int height) {
     this->getEventQueue()->windowResize(this->x(), this->y(), width, height);
-    _graphicsWindow->resized(this->x(), this->y(), width, height);
+    graphics_window_->resized(this->x(), this->y(), width, height);
 
     this->onResize(width, height);
 }
@@ -460,10 +491,18 @@ void OSGWidget::timerEvent(QTimerEvent *) {
 }
 
 void OSGWidget::home() {
-    _viewer->home();
+    viewer_->home();
 }
 
 void OSGWidget::trackballCenterOn(double x, double y, double z) {
-    _trackballMani->setCenter(osg::Vec3d(x, y, z));
-    _trackballMani->setDistance(700);
+//    _trackballMani->setCenter(osg::Vec3d(x, y, z));
+//    _trackballMani->setDistance(700);
+}
+
+void OSGWidget::flyToViewPoint(const osgEarth::Viewpoint &viewpoint) {
+    osgEarth::Viewpoint currentVP = earth_mani_->getViewpoint();
+    double distance = currentVP.focalPoint()->distanceTo(currentVP.focalPoint().get());
+    double duration = osg::clampBetween(distance / 2500.0, 2.0, 8.0); // fly speed, minimum fly time, maximum fly time.
+
+    earth_mani_->setViewpoint(viewpoint, duration);
 }

@@ -34,12 +34,20 @@ add_custom_target(copy_fonts
         ${CMAKE_CURRENT_SOURCE_DIR}/fonts/arial.ttf ${COPY_OUTPUT_PATH}/fonts/arial.ttf
         )
 
+add_custom_target(copy_earth
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_CURRENT_SOURCE_DIR}/earth/gisms.earth ${COPY_OUTPUT_PATH}/earth/gisms.earth
+        )
+
 IF (WIN32)
     set(PLATFORM WIN32)
 ENDIF ()
 
-add_executable(${PROJECT_NAME} ${PLATFORM} ${SOURCES_CXX})
-add_dependencies(${PROJECT_NAME} copy_ts copy_model copy_images copy_manual copy_fonts)
+include_directories(${Boost_INCLUDE_DIR})
+link_directories(${Boost_LIBRARY_DIR})
 
-target_link_libraries(${PROJECT_NAME} core render)
+add_executable(${PROJECT_NAME} ${PLATFORM} ${SOURCES_CXX})
+add_dependencies(${PROJECT_NAME} copy_ts copy_model copy_images copy_manual copy_fonts copy_earth)
+
+target_link_libraries(${PROJECT_NAME} core render ${Boost_LIBRARIES})
 qt5_use_modules(${PROJECT_NAME} Sql Gui Widgets OpenGL Network Concurrent)

@@ -7,8 +7,9 @@ file(GLOB SOURCES_CXX *.cpp *.h)
 include_directories(
         ${OPENSCENEGRAPH_INCLUDE_DIRS}
         ${OSGEARTH_INCLUDE_DIRS}
+        ${Boost_INCLUDE_DIR}
 )
-link_directories(${OPENSCENEGRAPH_LIBRARY_DIRS})
+#link_directories(${OPENSCENEGRAPH_LIBRARY_DIRS})
 
 add_library(${PROJECT_NAME} ${SOURCES_CXX})
 target_link_libraries(${PROJECT_NAME}

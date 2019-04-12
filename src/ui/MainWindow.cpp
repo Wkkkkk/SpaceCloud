@@ -24,9 +24,13 @@
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QFileDialog>
+#include <QtWidgets/QApplication>
+
+#include <boost/log/trivial.hpp>
 
 #include "OSGWidget.h"
 #include "MainWindow.h"
+#include "ItemInfos.h"
 
 //using namespace core;
 
@@ -79,12 +83,54 @@ void MainWindow::createDockWidget() {
     //tree_widget_->setColumnWidth(0, 100);
     //tree_widget_->setStyleSheet("QTreeWidget::item {height:25px;");
 
+    // index: 0
     {
-        QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList("Position"));
+        QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList("DEM/DOM"));
+//        item->setIcon(0, QIcon(""));
         item->setExpanded(true);
     }
 
-    dock_widget_ = new QDockWidget("Status", this);
+    // 1
+    {
+        QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList("ShapeFile"));
+        item->setExpanded(true);
+    }
+
+    // 2
+    {
+        QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList("User"));
+        item->setExpanded(true);
+
+        QStringList all_items = {"Point Cloud", "Oblique Models", "OSG Models"};
+        for (const auto &name : all_items) {
+            QTreeWidgetItem *child_item = new QTreeWidgetItem(item, QStringList(name));
+            child_item->setExpanded(true);
+        }
+    }
+
+    // 3
+    {
+        QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList("City Marker"));
+        item->setExpanded(true);
+
+        std::vector<ItemInfos> all_items = {
+                {"ShenZhen", DataType::Others, "", osgEarth::Viewpoint("ShenZhen", 114.06, 22.55, 0, 0, -90,
+                                                                       1000),                                      false},
+                {"BeiJing",  DataType::Others, "", osgEarth::Viewpoint("BeiJing", 116.30, 39.90, 0, 0, -90,
+                                                                       1000),                                      false},
+                {"Boston",   DataType::Others, "", osgEarth::Viewpoint("Boston", -71.07, 42.34, 0, 0, -90,
+                                                                       1000),                                      false}
+        };
+
+        for (const auto &info : all_items) {
+            QTreeWidgetItem *child_item = new QTreeWidgetItem(item, QStringList(info.name));
+            child_item->setExpanded(true);
+
+            addVariantToTreeWidgetItem(info, child_item);
+        }
+    }
+
+    dock_widget_ = new QDockWidget("Scene", this);
     dock_widget_->setFixedWidth(200);
     dock_widget_->setFeatures(QDockWidget::AllDockWidgetFeatures);
     dock_widget_->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
@@ -92,12 +138,55 @@ void MainWindow::createDockWidget() {
     this->addDockWidget(Qt::LeftDockWidgetArea, dock_widget_);
 
     //QTreeWidget connect
-    //connect(edit_widget_, SIGNAL(itemClicked(QTreeWidgetItem *, int)), this, SLOT(TreeWidgetClicked(QTreeWidgetItem *, int)));
-    //connect(edit_widget_, SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)), this, SLOT(TreeWidgetDoubleClicked(QTreeWidgetItem *, int)));
-    //connect(edit_widget_, SIGNAL(itemPressed(QTreeWidgetItem *, int)), this, SLOT(TreeWidgetRightedClicked(QTreeWidgetItem *, int)));
+    connect(tree_widget_, &QTreeWidget::itemPressed, this, &MainWindow::TreeWidgetClicked);
+    connect(tree_widget_, &QTreeWidget::itemDoubleClicked, this, &MainWindow::TreeWidgetDoubleClicked);
 }
+
+void MainWindow::addVariantToTreeWidgetItem(const ItemInfos &info, QTreeWidgetItem *item) {
+    QVariant item_var;
+    item_var.setValue(info);
+    item->setData(0, Qt::UserRole, item_var);
+}
+
 
 void MainWindow::keyPressEvent(QKeyEvent *event) {
     osgwidget_->keyPressEvent(event);
 //    QWidget::keyPressEvent(event);
+}
+
+void MainWindow::TreeWidgetClicked(QTreeWidgetItem *item, int column) {
+    if (!(QApplication::mouseButtons() & Qt::RightButton)) return;
+
+    // valid check
+    QVariant item_var = item->data(column, Qt::UserRole);
+    if (item_var.isNull()) return;
+
+    ItemInfos infos = item_var.value<ItemInfos>();
+    BOOST_LOG_TRIVIAL(trace) << "TreeWidgetClicked at " << infos;
+
+    // type convert
+
+    // menu exec
+
+//
+//    QAction *newAct = new QAction(QIcon(":/images/connection.png"), tr("&Act"), this);
+//    newAct->setStatusTip(tr("some act"));
+//    connect(newAct, SIGNAL(triggered()), this, SLOT(newDev()));
+//
+//    QMenu menu(this);
+//    menu.addAction(newAct);
+//
+//    menu.exec(QCursor::pos());
+}
+
+void MainWindow::TreeWidgetDoubleClicked(QTreeWidgetItem *item, int column) {
+
+    // valid check
+    QVariant item_var = item->data(column, Qt::UserRole);
+    if (item_var.isNull()) return;
+
+    ItemInfos infos = item_var.value<ItemInfos>();
+    BOOST_LOG_TRIVIAL(trace) << "TreeWidgetDoubleClicked at " << infos;
+
+    osgwidget_->flyToViewPoint(infos.localtion);
 }

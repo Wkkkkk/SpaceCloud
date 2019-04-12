@@ -20,14 +20,18 @@
 #define SPACECLOUD_MAINWINDOW_H
 
 #include <memory>
+#include <iostream>
 
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QDockWidget>
 #include <QtWidgets/QTreeWidget>
+#include <QtWidgets/QTreeWidgetItem>
 #include <QtWidgets/QAction>
 
 //forward declaration
 class OSGWidget;
+
+class ItemInfos;
 
 /**
  * @brief the Mainwindow class
@@ -42,6 +46,7 @@ public:
 
     Q_DISABLE_COPY(MainWindow);
 protected:
+    //!inherit from QMainWindow
     virtual void keyPressEvent(QKeyEvent *event);
 private:
     /**
@@ -56,22 +61,31 @@ private:
 
     void createDockWidget();
 
+    /**
+     * @brief It inits all members
+     * add infomations about a item to its value
+     * */
+    void addVariantToTreeWidgetItem(const ItemInfos &info, QTreeWidgetItem *item);
+
     //core widget
-    OSGWidget *osgwidget_{};
+    OSGWidget *osgwidget_;
 
     //other widgets
-    QDockWidget *dock_widget_{};
-    QTreeWidget *tree_widget_{};
+    QDockWidget *dock_widget_;
+    QTreeWidget *tree_widget_;
 
     //buttons
-    QAction *open_file_action_{};
+    QAction *open_file_action_;
 
 signals:
     void test_signal();
 
 private slots:
-
     void open();
+
+    void TreeWidgetClicked(QTreeWidgetItem *, int);
+
+    void TreeWidgetDoubleClicked(QTreeWidgetItem *, int);
 };
 
 #endif //SPACECLOUD_MAINWINDOW_H

@@ -28,6 +28,10 @@
 //Qt
 #include <QtCore/QFileInfo>
 #include <QtWidgets/QOpenGLWidget>
+//osgEarth
+#include <osgEarth/MapNode>
+#include <osgEarth/Viewpoint>
+#include <osgEarthUtil/EarthManipulator>
 
 /**
  * @brief The OSGWidget class is the bridge between OSG and Qt.
@@ -46,14 +50,26 @@ public:
     explicit OSGWidget(QWidget *parent = nullptr, Qt::WindowFlags f = 0);
     ~OSGWidget() final = default;
 
+    Q_DISABLE_COPY(OSGWidget);
+
+    /**
+     * @brief init the scene, camera, etc...
+     **/
     void init();
 
+    /**
+     * @brief load models into scene
+     * @param ItemInfos: name, type, file_path
+     **/
     void readDataFromFile(const QFileInfo &file_path);
+
+    /**
+     * @brief change current viewpoint to target
+     **/
+    void flyToViewPoint(const osgEarth::Viewpoint &viewpoint);
 
     //!inherit from QOpenGLWidget
     virtual void keyPressEvent(QKeyEvent *event);
-
-    Q_DISABLE_COPY(OSGWidget);
 protected:
     //!inherit from QOpenGLWidget
     virtual void paintEvent(QPaintEvent *paintEvent);
@@ -109,16 +125,17 @@ private:
     osgGA::EventQueue *getEventQueue() const;
 
     //! Ref of OSG Graphics Window
-    osg::ref_ptr<osgViewer::GraphicsWindowEmbedded> _graphicsWindow;
+    osg::ref_ptr<osgViewer::GraphicsWindowEmbedded> graphics_window_;
     //! Ref of OSG Viewer
-    osg::ref_ptr<osgViewer::Viewer> _viewer;
+    osg::ref_ptr<osgViewer::Viewer> viewer_;
     //! root node of the scene
     osg::ref_ptr<osg::Group> root_node_;
     osg::ref_ptr<osg::Switch> text_node_;
 
+    osg::ref_ptr<osgEarth::MapNode> map_node_;
+
     //! some manipulators
-    osg::ref_ptr<osgGA::TrackballManipulator> _trackballMani;
-    osg::ref_ptr<osgGA::TerrainManipulator> _terrainMani;
+    osg::ref_ptr<osgEarth::Util::EarthManipulator> earth_mani_;
 public slots:
 
     //! Zoom Viewer to whole display

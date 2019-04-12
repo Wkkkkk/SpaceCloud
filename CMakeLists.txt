@@ -5,6 +5,7 @@ set(CMAKE_BUILD_TYPE Release CACHE STRING "set build type to Release")
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(COPY_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH})
 #set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+set(CMAKE_CXX_FLAGS "-g -Wall -DBOOST_LOG_DYN_LINK")
 
 #output setting for windows compatibility
 IF (WIN32)
@@ -22,8 +23,6 @@ IF (UNIX)
     set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH}:/usr/local/Qt-5.11.1/lib")  # for local Qt5.11
 
     set(CXX_FLAGS
-            -g
-            -Wall
             -Wextra
             #        -Werror
             #        -Wconversion
@@ -36,7 +35,7 @@ IF (UNIX)
             -march=native
             -rdynamic
             )
-    string(REPLACE ";" " " CMAKE_CXX_FLAGS "${CXX_FLAGS}")
+    string(REPLACE ";" " " CMAKE_CXX_FLAGS "${CXX_FLAGS};${CMAKE_CXX_FLAGS}")
     set(CMAKE_CXX_FLAGS_DEBUG "-O0")
     set(CMAKE_CXX_FLAGS_RELEASE "-O2 -finline-limit=1000 -DNDEBUG")
 
@@ -71,5 +70,6 @@ find_package(Qt5Widgets REQUIRED)
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Gui REQUIRED)
 find_package(Qt5Network REQUIRED)
+find_package(Boost COMPONENTS log thread date_time filesystem system REQUIRED)
 
 add_subdirectory(src)
