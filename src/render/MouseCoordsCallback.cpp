@@ -35,23 +35,40 @@ MouseCoordsCallback::MouseCoordsCallback(osgText::Text *label)
 
 }
 
-void MouseCoordsCallback::set(const osgEarth::GeoPoint &mapCoords, osg::View *view, osgEarth::MapNode *mapNode) {
+void MouseCoordsCallback::set(const osgEarth::GeoPoint &wgsPoint, osg::View *view, osgEarth::MapNode *mapNode) {
+    auto print2screen = [](const osgEarth::GeoPoint &geo_point) -> std::string {
+        std::string coords_str = Stringify()
+                << std::fixed
+                << geo_point.x()
+                << ", " << geo_point.y()
+                << ", " << geo_point.z()
+                << " | " << geo_point.getSRS()->getName()
+                << "\n";
+
+        return coords_str;
+    };
+
     if (label_.valid()) {
         osg::Vec3d eye, center, up;
         view->getCamera()->getViewMatrixAsLookAt(eye, center, up);
         osg::Vec3d world;
-        mapCoords.toWorld(world);
-        double range = (eye - world).length();
+        wgsPoint.toWorld(world);
 
-        label_->setText(Stringify()
-                                << std::fixed
-                                << mapCoords.x()
-                                << ", " << mapCoords.y()
-                                << ", " << mapCoords.z()
-                                << "; RNG:" << range
-                                << "  |  "
-                                << mapCoords.getSRS()->getName());
+        std::string coords_str = print2screen(wgsPoint);
 
+        size_t utm_number = static_cast<int>(wgsPoint.x() / 6) + 31;
+        std::ostringstream stringStream;
+        stringStream << "+proj=utm +zone=" << std::to_string(utm_number) << " +ellps=GRS80 +units=m";
+        std::string srs_str = stringStream.str();
+
+        const osgEarth::SpatialReference *utm_sf = osgEarth::SpatialReference::get(srs_str);
+
+        osgEarth::GeoPoint utmPoint = wgsPoint.transform(utm_sf);
+        if (utmPoint.isValid()) {
+            coords_str += print2screen(utmPoint);
+        }
+
+        label_->setText(coords_str);
     }
 }
 

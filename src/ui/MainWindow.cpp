@@ -70,12 +70,12 @@ void MainWindow::createMenu() {
     connect(open_file_action_, &QAction::triggered, this, &MainWindow::loadFile);
 
     read_config_action_ = new QAction(tr("Read Config"), this);
-    read_config_action_->setIcon(QIcon(":/images/file_save.png"));
+    read_config_action_->setIcon(QIcon(":/images/setup.png"));
     connect(read_config_action_, &QAction::triggered, this, &MainWindow::readConfig);
 }
 
 void MainWindow::createToolBar() {
-    QToolBar *toolBar = addToolBar("Tools");
+    QToolBar *toolBar = addToolBar(tr("Tools"));
 
     toolBar->addAction(open_file_action_);
     toolBar->addSeparator();
@@ -106,23 +106,22 @@ void MainWindow::createDockWidget() {
 
     // 2
     {
-        QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList("User Data"));
+        QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList(tr("User Data")));
         item->setExpanded(true);
     }
 
     // 3
     {
-        QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList("City Marker"));
+        QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList(tr("City Marker")));
         item->setExpanded(true);
 
         std::vector<ItemInfos> city_items = {
-                {"ShenZhen", ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("ShenZhen", 114.06, 22.55, 0, 0,
-                                                                                    -90,
-                                                                       1000),                                      false},
-                {"BeiJing",  ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("BeiJing", 116.30, 39.90, 0, 0, -90,
-                                                                                    1000),                                      false},
-                {"Boston",   ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("Boston", -71.07, 42.34, 0, 0, -90,
-                                                                                    1000),                                      false}
+                {tr("ShenZhen"), ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("ShenZhen", 114.06, 22.55, 0, 0,
+                                                                                        -90, 1000), false},
+                {tr("BeiJing"),  ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("BeiJing", 116.30, 39.90, 0, 0,
+                                                                                        -90, 1000), false},
+                {tr("Boston"),   ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("Boston", -71.07, 42.34, 0, 0,
+                                                                                        -90, 1000), false}
         };
 
         for (const auto &info : city_items) {
@@ -133,7 +132,7 @@ void MainWindow::createDockWidget() {
         }
     }
 
-    dock_widget_ = new QDockWidget("Scene", this);
+    dock_widget_ = new QDockWidget(tr("Scene"), this);
     dock_widget_->setFixedWidth(200);
     dock_widget_->setFeatures(QDockWidget::AllDockWidgetFeatures);
     dock_widget_->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
@@ -173,11 +172,11 @@ void MainWindow::TreeWidgetClicked(QTreeWidgetItem *item, int column) {
     // menu exec
     QMenu *menu = new QMenu(this);
 
-    QAction *remove_action = new QAction(QIcon(":/images/connection.png"), tr("Remove"), this);
+    QAction *remove_action = new QAction(QIcon(":/images/delete.png"), tr("Remove"), this);
     remove_action->setStatusTip(tr("remove this from the scene"));
     menu->addAction(remove_action);
 
-    QAction *cancel_action = new QAction(QIcon(":/images/connection.png"), tr("Cancel"), this);
+    QAction *cancel_action = new QAction(QIcon(":/images/cancel.png"), tr("Cancel"), this);
     menu->addAction(cancel_action);
 
     connect(remove_action, &QAction::triggered, [=]() {
@@ -216,8 +215,8 @@ void MainWindow::loadFile() {
 void MainWindow::loadItem(ItemInfos infos) {
     BOOST_LOG_TRIVIAL(trace) << "MainWindow load item: " << infos;
 
-    QList<QTreeWidgetItem *> child_list = tree_widget_->findItems("User Data", Qt::MatchContains | Qt::MatchRecursive,
-                                                                  0);
+    QList<QTreeWidgetItem *> child_list = tree_widget_->findItems(tr("User Data"),
+                                                                  Qt::MatchContains | Qt::MatchRecursive, 0);
     assert(child_list.size() == 1);
 
     QTreeWidgetItem *child_item = new QTreeWidgetItem(child_list.first(), QStringList(infos.name));

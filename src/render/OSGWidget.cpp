@@ -104,18 +104,6 @@ void OSGWidget::initSceneGraph() {
     sky_node->addChild(map_node_.get());
     root_node_->addChild(sky_node);
 
-    const osgEarth::SpatialReference *wgs84 = osgEarth::SpatialReference::get("wgs84");
-    const osgEarth::SpatialReference *utm15 = osgEarth::SpatialReference::get(
-            "+proj=utm +zone=15 +ellps=GRS80 +units=m");
-
-    osgEarth::GeoPoint wgsPoint(wgs84, -93.0, 34.0);
-    osgEarth::GeoPoint utmPoint = wgsPoint.transform(utm15);
-
-    if (utmPoint.isValid()) {
-        std::cout << "utm:" << utmPoint.toString() << std::endl;
-    }
-    // do something
-
     osg::ref_ptr<osg::Switch> user_node = new osg::Switch;
     user_node->setName(user_node_name);
     sky_node->addChild(user_node);
@@ -129,11 +117,11 @@ void OSGWidget::initSceneGraph() {
         text_geode_ = new osgText::Text;
         text_node->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
         text_node->addDrawable(text_geode_);
-        text_geode_->setCharacterSize(30.0);
+        text_geode_->setCharacterSize(20.0);
         text_geode_->setFont("fonts/arial.ttf");
         text_geode_->setColor(osg::Vec4(0, 1, 1, 1));
-        text_geode_->setText("This is a test");
-        text_geode_->setPosition(osg::Vec3d(10, 20, 0));
+        text_geode_->setText("Welcome");
+        text_geode_->setPosition(osg::Vec3d(10, 40, 0));
 
         hud_node->addChild(text_node);
     }
