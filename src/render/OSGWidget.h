@@ -32,6 +32,10 @@
 #include <osgEarth/MapNode>
 #include <osgEarth/Viewpoint>
 #include <osgEarthUtil/EarthManipulator>
+#include <osgText/Text>
+
+//forward declaration
+class ItemInfos;
 
 /**
  * @brief The OSGWidget class is the bridge between OSG and Qt.
@@ -67,6 +71,10 @@ public:
      * @brief change current viewpoint to target
      **/
     void flyToViewPoint(const osgEarth::Viewpoint &viewpoint);
+
+    void loadModelToScene(const ItemInfos &infos);
+
+    void removeModelFromScene(const ItemInfos &infos);
 
     //!inherit from QOpenGLWidget
     virtual void keyPressEvent(QKeyEvent *event);
@@ -130,7 +138,7 @@ private:
     osg::ref_ptr<osgViewer::Viewer> viewer_;
     //! root node of the scene
     osg::ref_ptr<osg::Group> root_node_;
-    osg::ref_ptr<osg::Switch> text_node_;
+    osg::ref_ptr<osgText::Text> text_geode_;
 
     osg::ref_ptr<osgEarth::MapNode> map_node_;
 

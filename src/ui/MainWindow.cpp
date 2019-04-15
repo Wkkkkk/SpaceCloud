@@ -21,6 +21,7 @@
 
 #include <QtGui/QIcon>
 #include <QtGui/QKeyEvent>
+#include <QtCore/QSettings>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QFileDialog>
@@ -31,6 +32,7 @@
 #include "OSGWidget.h"
 #include "MainWindow.h"
 #include "ItemInfos.h"
+#include "FileLoadWidget.h"
 
 //using namespace core;
 
@@ -38,7 +40,6 @@ MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent)
 {
     this->setWindowTitle("SpaceCloud");
-    this->grabKeyboard();
 
     osgwidget_ = new OSGWidget(this);
     this->setCentralWidget(osgwidget_);
@@ -66,13 +67,20 @@ void MainWindow::open() {
 void MainWindow::createMenu() {
     open_file_action_ = new QAction(tr("Open"), this);
     open_file_action_->setIcon(QIcon(":/images/file_open.png"));
-    connect(open_file_action_, &QAction::triggered, this, &MainWindow::open);
+    connect(open_file_action_, &QAction::triggered, this, &MainWindow::loadFile);
+
+    read_config_action_ = new QAction(tr("Read Config"), this);
+    read_config_action_->setIcon(QIcon(":/images/file_save.png"));
+    connect(read_config_action_, &QAction::triggered, this, &MainWindow::readConfig);
 }
 
 void MainWindow::createToolBar() {
     QToolBar *toolBar = addToolBar("Tools");
 
     toolBar->addAction(open_file_action_);
+    toolBar->addSeparator();
+
+    toolBar->addAction(read_config_action_);
     toolBar->addSeparator();
 }
 
@@ -98,14 +106,8 @@ void MainWindow::createDockWidget() {
 
     // 2
     {
-        QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList("User"));
+        QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList("User Data"));
         item->setExpanded(true);
-
-        QStringList all_items = {"Point Cloud", "Oblique Models", "OSG Models"};
-        for (const auto &name : all_items) {
-            QTreeWidgetItem *child_item = new QTreeWidgetItem(item, QStringList(name));
-            child_item->setExpanded(true);
-        }
     }
 
     // 3
@@ -113,16 +115,17 @@ void MainWindow::createDockWidget() {
         QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList("City Marker"));
         item->setExpanded(true);
 
-        std::vector<ItemInfos> all_items = {
-                {"ShenZhen", DataType::Others, "", osgEarth::Viewpoint("ShenZhen", 114.06, 22.55, 0, 0, -90,
+        std::vector<ItemInfos> city_items = {
+                {"ShenZhen", ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("ShenZhen", 114.06, 22.55, 0, 0,
+                                                                                    -90,
                                                                        1000),                                      false},
-                {"BeiJing",  DataType::Others, "", osgEarth::Viewpoint("BeiJing", 116.30, 39.90, 0, 0, -90,
-                                                                       1000),                                      false},
-                {"Boston",   DataType::Others, "", osgEarth::Viewpoint("Boston", -71.07, 42.34, 0, 0, -90,
-                                                                       1000),                                      false}
+                {"BeiJing",  ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("BeiJing", 116.30, 39.90, 0, 0, -90,
+                                                                                    1000),                                      false},
+                {"Boston",   ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("Boston", -71.07, 42.34, 0, 0, -90,
+                                                                                    1000),                                      false}
         };
 
-        for (const auto &info : all_items) {
+        for (const auto &info : city_items) {
             QTreeWidgetItem *child_item = new QTreeWidgetItem(item, QStringList(info.name));
             child_item->setExpanded(true);
 
@@ -135,6 +138,7 @@ void MainWindow::createDockWidget() {
     dock_widget_->setFeatures(QDockWidget::AllDockWidgetFeatures);
     dock_widget_->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     dock_widget_->setWidget(tree_widget_);
+    dock_widget_->setFocusPolicy(Qt::NoFocus);
     this->addDockWidget(Qt::LeftDockWidgetArea, dock_widget_);
 
     //QTreeWidget connect
@@ -150,6 +154,8 @@ void MainWindow::addVariantToTreeWidgetItem(const ItemInfos &info, QTreeWidgetIt
 
 
 void MainWindow::keyPressEvent(QKeyEvent *event) {
+//    QMainWindow::keyPressEvent(event);
+    BOOST_LOG_TRIVIAL(trace) << "MainWindow keyPressEvent " << event->text().toStdString();
     osgwidget_->keyPressEvent(event);
 //    QWidget::keyPressEvent(event);
 }
@@ -164,19 +170,27 @@ void MainWindow::TreeWidgetClicked(QTreeWidgetItem *item, int column) {
     ItemInfos infos = item_var.value<ItemInfos>();
     BOOST_LOG_TRIVIAL(trace) << "TreeWidgetClicked at " << infos;
 
-    // type convert
-
     // menu exec
+    QMenu *menu = new QMenu(this);
 
-//
-//    QAction *newAct = new QAction(QIcon(":/images/connection.png"), tr("&Act"), this);
-//    newAct->setStatusTip(tr("some act"));
-//    connect(newAct, SIGNAL(triggered()), this, SLOT(newDev()));
-//
-//    QMenu menu(this);
-//    menu.addAction(newAct);
-//
-//    menu.exec(QCursor::pos());
+    QAction *remove_action = new QAction(QIcon(":/images/connection.png"), tr("Remove"), this);
+    remove_action->setStatusTip(tr("remove this from the scene"));
+    menu->addAction(remove_action);
+
+    QAction *cancel_action = new QAction(QIcon(":/images/connection.png"), tr("Cancel"), this);
+    menu->addAction(cancel_action);
+
+    connect(remove_action, &QAction::triggered, [=]() {
+        item->parent()->removeChild(item);
+
+        all_items_.removeOne(infos);
+
+        osgwidget_->removeModelFromScene(infos);
+    });
+
+    connect(cancel_action, &QAction::triggered, menu, &QMenu::close);
+
+    menu->exec(QCursor::pos());
 }
 
 void MainWindow::TreeWidgetDoubleClicked(QTreeWidgetItem *item, int column) {
@@ -189,4 +203,74 @@ void MainWindow::TreeWidgetDoubleClicked(QTreeWidgetItem *item, int column) {
     BOOST_LOG_TRIVIAL(trace) << "TreeWidgetDoubleClicked at " << infos;
 
     osgwidget_->flyToViewPoint(infos.localtion);
+}
+
+void MainWindow::loadFile() {
+
+    auto fileLoadWidget = new FileLoadWidget;
+    connect(fileLoadWidget, &FileLoadWidget::loadItem, this, &MainWindow::loadItem);
+
+    fileLoadWidget->exec();
+}
+
+void MainWindow::loadItem(ItemInfos infos) {
+    BOOST_LOG_TRIVIAL(trace) << "MainWindow load item: " << infos;
+
+    QList<QTreeWidgetItem *> child_list = tree_widget_->findItems("User Data", Qt::MatchContains | Qt::MatchRecursive,
+                                                                  0);
+    assert(child_list.size() == 1);
+
+    QTreeWidgetItem *child_item = new QTreeWidgetItem(child_list.first(), QStringList(infos.name));
+    addVariantToTreeWidgetItem(infos, child_item);
+    all_items_.push_back(infos);
+
+    osgwidget_->loadModelToScene(infos);
+}
+
+void MainWindow::readConfig() {
+    QDir config_dir("./config");
+    QStringList nameFilters;
+    nameFilters << "*.conf";
+    QFileInfoList file_infos = config_dir.entryInfoList(nameFilters, QDir::Files | QDir::Readable, QDir::Name);
+
+    for (const auto &file_info : file_infos) {
+        BOOST_LOG_TRIVIAL(trace) << "load config:" << file_info.filePath().toStdString();
+        QFile f(file_info.filePath());
+        f.open(QFile::ReadOnly);
+        QDataStream s(&f);
+        ItemInfos infos;
+        s >> infos;
+        f.close();
+
+        if (infos.persistence) loadItem(infos);
+    }
+}
+
+void MainWindow::saveConfig() {
+    QDir config_dir("./config");
+    if (!config_dir.exists()) config_dir.mkdir("./config");
+    else {
+        QFileInfoList file_infos = config_dir.entryInfoList(QDir::Files | QDir::Readable, QDir::Name);
+        for (const auto &file_info : file_infos) {
+            QFile f(file_info.filePath());
+            f.remove();
+        }
+    }
+
+    BOOST_LOG_TRIVIAL(trace) << "save config";
+    for (const ItemInfos &infos : all_items_) {
+        QString file_path = config_dir.path() + "/" + infos.name + ".conf";
+        QFile f(file_path);
+        f.open(QFile::WriteOnly);
+        QDataStream s(&f);
+        s << infos;
+        f.close();
+
+        BOOST_LOG_TRIVIAL(trace) << "write to: " << file_path.toStdString();
+    }
+}
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+    saveConfig();
+    event->accept();
 }

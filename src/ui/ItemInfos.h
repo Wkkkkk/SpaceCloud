@@ -24,34 +24,38 @@
 
 #include <QtCore/QString>
 #include <QtCore/QVariant>
+#include <QtCore/QDataStream>
 
 #include <osgEarth/Viewpoint>
 
 #include "Common.h"
 
-enum class DataType {
-    DemOrDom,
-    ShpFile,
-    PointCloud,
-    Buildings,
-    Model,
-    Others
-};
-
 struct ItemInfos {
+    enum DataType {
+        DemOrDom = 0,
+        ShpFile,
+        User,
+        Others
+    };
+
     QString name;
     DataType type;
-    QString file_path;
+    QStringList file_path;
     osgEarth::Viewpoint localtion;
     bool persistence;
-};
 
+    inline bool operator==(const ItemInfos &other) const {
+        return this->name == other.name;
+    }
+};
 Q_DECLARE_METATYPE(ItemInfos)
 
-inline std::ostream &operator<<(std::ostream &output, const ItemInfos &info) {
-    output << info.name.toStdString() << " " << info.localtion.toString() << " " << info.file_path.toStdString() << " "
-           << info.persistence;
-    return output;
-}
+// print to iostrem
+std::ostream &operator<<(std::ostream &output, const ItemInfos &info);
+
+// save to / load from file
+QDataStream &operator<<(QDataStream &out, const ItemInfos &info);
+
+QDataStream &operator>>(QDataStream &out, ItemInfos &info);
 
 #endif //SPACECLOUD_ITEMINFOS_H

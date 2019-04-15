@@ -27,7 +27,7 @@
 const char root_node_name[] = "root_node";
 const char earth_node_name[] = "earth_node";
 const char point_cloud_node_name[] = "point_cloud_node";
-const char ori_node_name[] = "ori_node";
+const char user_node_name[] = "user_node";
 const char hud_node_name[] = "hud_node";
 const char text_node_name[] = "text_node";
 const char positon_geode_name[] = "positon_geode";

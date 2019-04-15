@@ -37,6 +37,8 @@
 #include <osgDB/ReadFile>
 
 #include <osgEarth/ImageLayer>
+#include <osgEarth/GeoTransform>
+#include <osgEarth/Registry>
 #include <osgEarthUtil/Sky>
 #include <osgEarthUtil/ObjectLocator>
 #include <osgEarthUtil/EarthManipulator>
@@ -47,12 +49,17 @@
 #include <osgEarthDrivers/feature_ogr/OGRFeatureOptions>
 #include <osgEarthDrivers/agglite/AGGLiteOptions>
 
+#include <boost/log/trivial.hpp>
+
 #include "Common.h"
 #include "OSGWidget.h"
 #include "Singleton.h"
 #include "NodeCallback.h"
 #include "NodeTreeInfo.h"
 #include "NodeTreeSearch.h"
+#include "MouseCoordsCallback.h"
+
+#include "ItemInfos.h"
 
 using namespace osgHelper;
 
@@ -63,7 +70,8 @@ using namespace osgEarth::Features;
 OSGWidget::OSGWidget(QWidget *parent, Qt::WindowFlags f)
         : QOpenGLWidget(parent, f),
           graphics_window_(new osgViewer::GraphicsWindowEmbedded(this->x(), this->y(), this->width(), this->height())) {
-
+    // enable keypress event
+    this->setFocusPolicy(Qt::StrongFocus);
 }
 
 void OSGWidget::init() {
@@ -108,19 +116,26 @@ void OSGWidget::initSceneGraph() {
     }
     // do something
 
-    //locator
-//    osg::ref_ptr<osgEarth::Util::ObjectLocatorNode> locator = new osgEarth::Util::ObjectLocatorNode(map_node_->getMap());
-//    locator->setName("locator");
-//    locator->getLocator()->setPosition(osg::Vec3d(ground_center_location.y(), ground_center_location.x(), ground_center_location.z() + 1.8));
-//    sky_node->addChild(locator);
-
+    osg::ref_ptr<osg::Switch> user_node = new osg::Switch;
+    user_node->setName(user_node_name);
+    sky_node->addChild(user_node);
 
     osg::ref_ptr<osg::Camera> hud_node = createHUD();
     hud_node->setName(hud_node_name);
     {
-        text_node_ = new osg::Switch;
-        text_node_->setName(text_node_name);
-        hud_node->addChild(text_node_);
+        osg::ref_ptr<osg::Geode> text_node = new osg::Geode;
+        text_node->setName(text_node_name);
+
+        text_geode_ = new osgText::Text;
+        text_node->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+        text_node->addDrawable(text_geode_);
+        text_geode_->setCharacterSize(30.0);
+        text_geode_->setFont("fonts/arial.ttf");
+        text_geode_->setColor(osg::Vec4(0, 1, 1, 1));
+        text_geode_->setText("This is a test");
+        text_geode_->setPosition(osg::Vec3d(10, 20, 0));
+
+        hud_node->addChild(text_node);
     }
     root_node_->addChild(hud_node);
 
@@ -147,11 +162,21 @@ void OSGWidget::initCamera() {
     camera->setNearFarRatio(0.0000002);
     camera->setComputeNearFarMode(osg::CullSettings::COMPUTE_NEAR_FAR_USING_BOUNDING_VOLUMES);
 
+    //for status
     viewer_->addEventHandler(new osgViewer::StatsHandler);
     viewer_->addEventHandler(new osgGA::StateSetManipulator(camera->getStateSet()));
 
+    //for node tree
     viewer_->addEventHandler(new NodeTreeHandler(root_node_));
 
+    //print coords to screen
+    {
+        osg::ref_ptr<osgEarth::Util::MouseCoordsTool> mouse = new osgEarth::Util::MouseCoordsTool(map_node_);
+        mouse->addCallback(new MouseCoordsCallback(text_geode_));
+        viewer_->addEventHandler(mouse);
+    }
+
+    //for z-fighting
     osgEarth::Util::LogarithmicDepthBuffer logdepth;
     logdepth.install(camera);
 
@@ -505,4 +530,45 @@ void OSGWidget::flyToViewPoint(const osgEarth::Viewpoint &viewpoint) {
     double duration = osg::clampBetween(distance / 2500.0, 2.0, 8.0); // fly speed, minimum fly time, maximum fly time.
 
     earth_mani_->setViewpoint(viewpoint, duration);
+}
+
+void OSGWidget::loadModelToScene(const ItemInfos &infos) {
+
+    static osg::ref_ptr<osg::Switch> user_node = dynamic_cast<osg::Switch *>(
+            NodeTreeSearch::findNodeWithName(root_node_, user_node_name));
+
+    std::string node_name = infos.name.toStdString();
+    //locator
+    osg::ref_ptr<GeoTransform> locator = new GeoTransform();
+    locator->setName(node_name);
+    locator->setTerrain(map_node_->getTerrain());
+    locator->setAutoRecomputeHeights(true);
+    locator->setPosition(infos.localtion.focalPoint().value());
+
+    BOOST_LOG_TRIVIAL(trace) << "loadModelToScene: " << node_name << " at: "
+                             << infos.localtion.focalPoint()->toString();
+    for (const QString &file_path : infos.file_path) {
+        BOOST_LOG_TRIVIAL(trace) << "loading: " << file_path.toStdString();
+
+        osg::ref_ptr<osg::Node> node = osgDB::readNodeFile(file_path.toStdString());
+        locator->addChild(node);
+    }
+
+    // for texture
+    osgEarth::Registry::shaderGenerator().run(locator);
+    user_node->addChild(locator);
+
+    flyToViewPoint(infos.localtion);
+}
+
+void OSGWidget::removeModelFromScene(const ItemInfos &infos) {
+    static osg::ref_ptr<osg::Switch> user_node = dynamic_cast<osg::Switch *>(
+            NodeTreeSearch::findNodeWithName(root_node_, user_node_name));
+
+    std::string node_name = infos.name.toStdString();
+    osg::ref_ptr<GeoTransform> locator = dynamic_cast<GeoTransform *>(
+            NodeTreeSearch::findNodeWithName(user_node, node_name.data()));
+
+    user_node->removeChild(locator);
+    BOOST_LOG_TRIVIAL(trace) << "removeModelFromScene: " << infos;
 }

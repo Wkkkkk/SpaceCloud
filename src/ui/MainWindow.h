@@ -22,16 +22,17 @@
 #include <memory>
 #include <iostream>
 
+#include <QtCore/QList>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QDockWidget>
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QTreeWidgetItem>
 #include <QtWidgets/QAction>
 
+#include "ItemInfos.h"
+
 //forward declaration
 class OSGWidget;
-
-class ItemInfos;
 
 /**
  * @brief the Mainwindow class
@@ -48,7 +49,11 @@ public:
 protected:
     //!inherit from QMainWindow
     virtual void keyPressEvent(QKeyEvent *event);
+
+    virtual void closeEvent(QCloseEvent *event);
 private:
+    void saveConfig();
+
     /**
      * @brief It inits all members
      * @param none
@@ -76,6 +81,9 @@ private:
 
     //buttons
     QAction *open_file_action_;
+    QAction *read_config_action_;
+
+    QList<ItemInfos> all_items_;
 
 signals:
     void test_signal();
@@ -83,8 +91,13 @@ signals:
 private slots:
     void open();
 
-    void TreeWidgetClicked(QTreeWidgetItem *, int);
+    void loadFile();
 
+    void loadItem(ItemInfos infos);
+
+    void readConfig();
+
+    void TreeWidgetClicked(QTreeWidgetItem *, int);
     void TreeWidgetDoubleClicked(QTreeWidgetItem *, int);
 };
 
