@@ -67,10 +67,18 @@ private:
     void createDockWidget();
 
     /**
-     * @brief It inits all members
+     * @brief help functions
      * add infomations about a item to its value
      * */
     void addVariantToTreeWidgetItem(const ItemInfos &info, QTreeWidgetItem *item);
+
+    /**
+     * @brief help functions
+     * add target to scene
+     * */
+    void loadLayer(const ItemInfos &infos);
+
+    void loadModel(const ItemInfos &infos);
 
     //core widget
     OSGWidget *osgwidget_;
@@ -80,7 +88,7 @@ private:
     QTreeWidget *tree_widget_;
 
     //buttons
-    QAction *open_file_action_;
+    QAction *open_model_action_;
     QAction *read_config_action_;
 
     QList<ItemInfos> all_items_;
@@ -91,7 +99,7 @@ signals:
 private slots:
     void open();
 
-    void loadFile();
+    void loadFileActionTriggered();
 
     void loadItem(ItemInfos infos);
 

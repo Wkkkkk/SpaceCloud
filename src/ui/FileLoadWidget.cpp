@@ -68,7 +68,7 @@ void FileLoadWidget::init() {
 
         coords_ = new QLineEdit(this);
         coords_->setEnabled(true);
-        coords_->setPlaceholderText(tr("lat, lon, hei"));
+        coords_->setPlaceholderText(tr("lon, lat, hei"));
         gridlayout->addWidget(coords_, 2, 1, 1, 3);
     }
 
@@ -134,8 +134,8 @@ void FileLoadWidget::loadFileFromPaths() {
         return;
     }
 
-    double lat = coords_str_list[0].toDouble();
-    double lon = coords_str_list[1].toDouble();
+    double lon = coords_str_list[0].toDouble();
+    double lat = coords_str_list[1].toDouble();
     double height = coords_str_list[2].toDouble();
 
     osgEarth::Viewpoint viewpoint(name_str.toStdString().data(), lon, lat, height, 0, -90, 1000);

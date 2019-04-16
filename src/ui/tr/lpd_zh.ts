@@ -20,6 +20,16 @@
     </message>
     <message>
         <location filename="../MainWindow.cpp"/>
+        <source>Scene</source>
+        <translation>场景</translation>
+    </message>
+    <message>
+        <location filename="../MainWindow.cpp"/>
+        <source>Layer</source>
+        <translation>图层</translation>
+    </message>
+    <message>
+        <location filename="../MainWindow.cpp"/>
         <source>User Data</source>
         <translation>用户数据</translation>
     </message>
@@ -37,6 +47,16 @@
         <location filename="../MainWindow.cpp"/>
         <source>BeiJing</source>
         <translation>北京</translation>
+    </message>
+    <message>
+        <location filename="../MainWindow.cpp"/>
+        <source>Guangzhou</source>
+        <translation>广州</translation>
+    </message>
+    <message>
+        <location filename="../MainWindow.cpp"/>
+        <source>ShenShan</source>
+        <translation>深汕</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp"/>

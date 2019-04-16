@@ -17,8 +17,8 @@
  * limitations under the License.
 */
 
-#ifndef SPACECLOUD_TEST_H
-#define SPACECLOUD_TEST_H
+#ifndef SPACECLOUD_LAYER_H
+#define SPACECLOUD_LAYER_H
 
 #include <osgEarth/MapNode>
 
@@ -29,4 +29,4 @@ void addStreets(osgEarth::Map *map);
 void addParks(osgEarth::Map *map);
 
 
-#endif //SPACECLOUD_TEST_H
+#endif //SPACECLOUD_LAYER_H

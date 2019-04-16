@@ -30,7 +30,7 @@
 #include <osgEarthDrivers/model_feature_geom/FeatureGeomModelOptions>
 #include <osgEarthDrivers/engine_rex/RexTerrainEngineOptions>
 
-#include "test.h"
+#include "Layer.h"
 
 using namespace osgEarth;
 using namespace osgEarth::Drivers;
@@ -38,11 +38,11 @@ using namespace osgEarth::Features;
 using namespace osgEarth::Symbology;
 using namespace osgEarth::Util;
 
-#define BUILDINGS_URL    "../data/boston_buildings_utm19.shp"
-#define RESOURCE_LIB_URL "../data/resources/textures_us/catalog.xml"
-#define STREETS_URL      "../data/boston-scl-utm19n-meters.shp"
-#define PARKS_URL        "../data/boston-parks.shp"
-#define TREE_MODEL_URL   "../data/tree.osg"
+#define BUILDINGS_URL    "./data/building_wgs84.shp"
+#define RESOURCE_LIB_URL "./data/resources/textures_us/catalog.xml"
+#define STREETS_URL      "./data/boston-scl-utm19n-meters.shp"
+#define PARKS_URL        "./data/boston-parks.shp"
+#define TREE_MODEL_URL   "./data/tree.osg"
 
 void addBuildings(Map *map) {
     // create a feature source to load the building footprint shapefile.
@@ -57,7 +57,7 @@ void addBuildings(Map *map) {
 
     // Extrude the shapes into 3D buildings.
     ExtrusionSymbol *extrusion = buildingStyle.getOrCreate<ExtrusionSymbol>();
-    extrusion->heightExpression() = NumericExpression("3.5 * max( [story_ht_], 1 )");
+    extrusion->heightExpression() = NumericExpression("3.5 * max( [story_ht], 1 )");
     extrusion->flatten() = true;
     extrusion->wallStyleName() = "building-wall";
     extrusion->roofStyleName() = "building-roof";
@@ -107,6 +107,7 @@ void addBuildings(Map *map) {
     FeatureModelLayer *layer = new FeatureModelLayer();
     layer->setName("Buildings");
     layer->options().featureSource() = buildingData;
+    std::cout << "driver: " << buildingData.ogrDriver().value() << std::endl;
     layer->options().styles() = styleSheet;
     layer->options().layout() = layout;
 

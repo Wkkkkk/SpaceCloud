@@ -16,8 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-#include <utility>
 #include <stdio.h>
+#include <utility>
+#include <unordered_map>
+#include <functional>
 
 #include <QtGui/QIcon>
 #include <QtGui/QKeyEvent>
@@ -35,6 +37,9 @@
 #include "FileLoadWidget.h"
 
 //using namespace core;
+using std::placeholders::_1;
+
+const QString config_dir_name_str = "./config";
 
 MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent)
@@ -65,9 +70,9 @@ void MainWindow::open() {
 }
 
 void MainWindow::createMenu() {
-    open_file_action_ = new QAction(tr("Open"), this);
-    open_file_action_->setIcon(QIcon(":/images/file_open.png"));
-    connect(open_file_action_, &QAction::triggered, this, &MainWindow::loadFile);
+    open_model_action_ = new QAction(tr("Open"), this);
+    open_model_action_->setIcon(QIcon(":/images/file_open.png"));
+    connect(open_model_action_, &QAction::triggered, this, &MainWindow::loadFileActionTriggered);
 
     read_config_action_ = new QAction(tr("Read Config"), this);
     read_config_action_->setIcon(QIcon(":/images/setup.png"));
@@ -77,7 +82,7 @@ void MainWindow::createMenu() {
 void MainWindow::createToolBar() {
     QToolBar *toolBar = addToolBar(tr("Tools"));
 
-    toolBar->addAction(open_file_action_);
+    toolBar->addAction(open_model_action_);
     toolBar->addSeparator();
 
     toolBar->addAction(read_config_action_);
@@ -93,35 +98,47 @@ void MainWindow::createDockWidget() {
 
     // index: 0
     {
-        QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList("DEM/DOM"));
-//        item->setIcon(0, QIcon(""));
+        QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList(tr("Layer")));
+        item->setIcon(0, QIcon(":/images/subjectgeographic.png"));
         item->setExpanded(true);
+
+        std::vector<ItemInfos> city_items = {
+                {tr("ShenShan"), ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("Guangzhou", 114.978, 22.843, 0,
+                                                                                        0,
+                                                                                        -90, 1000), false},
+                {tr("Boston"),   ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("Boston", -71.07, 42.34, 0, 0,
+                                                                                        -90, 1000), false}
+        };
+
+        for (const auto &info : city_items) {
+            QTreeWidgetItem *child_item = new QTreeWidgetItem(item, QStringList(info.name));
+            child_item->setExpanded(true);
+
+            addVariantToTreeWidgetItem(info, child_item);
+        }
     }
 
     // 1
     {
-        QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList("ShapeFile"));
+        QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList(tr("User Data")));
+        item->setIcon(0, QIcon(":/images/draw.png"));
         item->setExpanded(true);
     }
 
     // 2
     {
-        QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList(tr("User Data")));
-        item->setExpanded(true);
-    }
-
-    // 3
-    {
         QTreeWidgetItem *item = new QTreeWidgetItem(tree_widget_, QStringList(tr("City Marker")));
+        item->setIcon(0, QIcon(":/images/geographical-position.png"));
         item->setExpanded(true);
 
         std::vector<ItemInfos> city_items = {
-                {tr("ShenZhen"), ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("ShenZhen", 114.06, 22.55, 0, 0,
+                {tr("ShenZhen"),  ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("ShenZhen", 114.06, 22.55, 0, 0,
                                                                                         -90, 1000), false},
-                {tr("BeiJing"),  ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("BeiJing", 116.30, 39.90, 0, 0,
+                {tr("BeiJing"),   ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("BeiJing", 116.30, 39.90, 0, 0,
                                                                                         -90, 1000), false},
-                {tr("Boston"),   ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("Boston", -71.07, 42.34, 0, 0,
-                                                                                        -90, 1000), false}
+                {tr("Guangzhou"), ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("Guangzhou", 114.978, 22.843,
+                                                                                         0, 0,
+                                                                                         -90, 1000), false},
         };
 
         for (const auto &info : city_items) {
@@ -180,11 +197,20 @@ void MainWindow::TreeWidgetClicked(QTreeWidgetItem *item, int column) {
     menu->addAction(cancel_action);
 
     connect(remove_action, &QAction::triggered, [=]() {
+        // treewidget
         item->parent()->removeChild(item);
 
+        // memory
         all_items_.removeOne(infos);
 
+        // scene
         osgwidget_->removeModelFromScene(infos);
+
+        // file
+        QString config_file_path = config_dir_name_str + "/" + infos.name + ".conf";
+        QFile f(config_file_path);
+        BOOST_LOG_TRIVIAL(trace) << "remove config: " << f.fileName().toStdString();
+        f.remove();
     });
 
     connect(cancel_action, &QAction::triggered, menu, &QMenu::close);
@@ -204,7 +230,7 @@ void MainWindow::TreeWidgetDoubleClicked(QTreeWidgetItem *item, int column) {
     osgwidget_->flyToViewPoint(infos.localtion);
 }
 
-void MainWindow::loadFile() {
+void MainWindow::loadFileActionTriggered() {
 
     auto fileLoadWidget = new FileLoadWidget;
     connect(fileLoadWidget, &FileLoadWidget::loadItem, this, &MainWindow::loadItem);
@@ -213,7 +239,35 @@ void MainWindow::loadFile() {
 }
 
 void MainWindow::loadItem(ItemInfos infos) {
-    BOOST_LOG_TRIVIAL(trace) << "MainWindow load item: " << infos;
+    QStringList file_paths = infos.file_path;
+    QFileInfo file_info(file_paths.first());
+
+    std::unordered_map<std::string, std::function<void(const ItemInfos &)>> hash_map;
+    hash_map["osg"] = std::bind(&MainWindow::loadModel, this, _1);
+    hash_map["osgb"] = std::bind(&MainWindow::loadModel, this, _1);
+    hash_map["earth"] = std::bind(&MainWindow::loadLayer, this, _1);
+
+    std::string file_ext = file_info.suffix().toStdString();
+    auto func = hash_map[file_ext];
+    func(infos);
+}
+
+void MainWindow::loadLayer(const ItemInfos &infos) {
+    BOOST_LOG_TRIVIAL(trace) << "MainWindow load layer: " << infos;
+
+    QList<QTreeWidgetItem *> child_list = tree_widget_->findItems(tr("Layer"),
+                                                                  Qt::MatchContains | Qt::MatchRecursive, 0);
+    assert(child_list.size() == 1);
+
+    QTreeWidgetItem *child_item = new QTreeWidgetItem(child_list.first(), QStringList(infos.name));
+    addVariantToTreeWidgetItem(infos, child_item);
+    all_items_.push_back(infos);
+
+    osgwidget_->loadLayerToScene(infos);
+}
+
+void MainWindow::loadModel(const ItemInfos &infos) {
+    BOOST_LOG_TRIVIAL(trace) << "MainWindow load model: " << infos;
 
     QList<QTreeWidgetItem *> child_list = tree_widget_->findItems(tr("User Data"),
                                                                   Qt::MatchContains | Qt::MatchRecursive, 0);
@@ -246,16 +300,8 @@ void MainWindow::readConfig() {
 }
 
 void MainWindow::saveConfig() {
-    QString config_dir_name_str = "./config";
     QDir config_dir;
     if (!config_dir.exists(config_dir_name_str)) config_dir.mkdir(config_dir_name_str);
-    else {
-        QFileInfoList file_infos = config_dir.entryInfoList(QDir::Files | QDir::Readable, QDir::Name);
-        for (const auto &file_info : file_infos) {
-            QFile f(file_info.filePath());
-            f.remove();
-        }
-    }
 
     config_dir.cd(config_dir_name_str);
     BOOST_LOG_TRIVIAL(trace) << "save config to: " << config_dir.absolutePath().toStdString();

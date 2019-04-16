@@ -5,7 +5,7 @@ set(CMAKE_BUILD_TYPE Release CACHE STRING "set build type to Release")
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(COPY_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH})
 #set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-set(CMAKE_CXX_FLAGS "-g -Wall -DBOOST_LOG_DYN_LINK")
+set(CMAKE_CXX_FLAGS "-DBOOST_LOG_DYN_LINK")
 
 #output setting for windows compatibility
 IF (WIN32)
@@ -24,6 +24,8 @@ IF (UNIX)
     set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH}:/usr/local/Qt-5.11.1/lib")  # for local Qt5.11
 
     set(CXX_FLAGS
+            -g
+            -Wall
             -Wextra
             #        -Werror
             #        -Wconversion

@@ -40,7 +40,6 @@
 #include <osgEarth/GeoTransform>
 #include <osgEarth/Registry>
 #include <osgEarthUtil/Sky>
-#include <osgEarthUtil/ObjectLocator>
 #include <osgEarthUtil/EarthManipulator>
 #include <osgEarthUtil/LogarithmicDepthBuffer>
 #include <osgEarthFeatures/FeatureModelLayer>
@@ -60,7 +59,7 @@
 #include "MouseCoordsCallback.h"
 
 #include "ItemInfos.h"
-#include "test.h"
+#include "Layer.h"
 
 using namespace osgHelper;
 
@@ -82,7 +81,7 @@ void OSGWidget::init() {
 //    initHelperNode();
     initCamera();
     initQueryHandler();
-    addCityLayer();
+    addBuildings(map_node_->getMap());
 
     startTimer(1000 / 60.f);  // 60hz
 }
@@ -109,6 +108,10 @@ void OSGWidget::initSceneGraph() {
     sky_node->addChild(map_node_.get());
     root_node_->addChild(sky_node);
 
+    osg::ref_ptr<osg::Switch> layer_node = new osg::Switch;
+    layer_node->setName(layer_node_name);
+    sky_node->addChild(layer_node);
+
     osg::ref_ptr<osg::Switch> user_node = new osg::Switch;
     user_node->setName(user_node_name);
     sky_node->addChild(user_node);
@@ -131,10 +134,6 @@ void OSGWidget::initSceneGraph() {
         hud_node->addChild(text_node);
     }
     root_node_->addChild(hud_node);
-
-//    osg::ref_ptr<osg::Switch> helper_node = new osg::Switch;
-//    helper_node->setName(helper_node_name);
-//    root_node_->addChild(helper_node);
 }
 
 void OSGWidget::initCamera() {
@@ -525,6 +524,27 @@ void OSGWidget::flyToViewPoint(const osgEarth::Viewpoint &viewpoint) {
     earth_mani_->setViewpoint(viewpoint, duration);
 }
 
+void OSGWidget::loadLayerToScene(const ItemInfos &infos) {
+    // get the map
+//    osg::ref_ptr<osgEarth::Map> map = map_node_->getMap();
+
+    static osg::ref_ptr<osg::Switch> layer_node = dynamic_cast<osg::Switch *>(
+            NodeTreeSearch::findNodeWithName(root_node_, layer_node_name));
+
+    std::string node_name = infos.name.toStdString();
+    BOOST_LOG_TRIVIAL(trace) << "loadLayerToScene: " << node_name << " at: "
+                             << infos.localtion.focalPoint()->toString();
+    for (const QString &file_path : infos.file_path) {
+        BOOST_LOG_TRIVIAL(trace) << "loading: " << file_path.toStdString();
+
+        osg::ref_ptr<osg::Node> node = osgDB::readNodeFile(file_path.toStdString());
+        node->setName(node_name);
+        layer_node->addChild(node);
+    }
+
+    flyToViewPoint(infos.localtion);
+}
+
 void OSGWidget::loadModelToScene(const ItemInfos &infos) {
 
     static osg::ref_ptr<osg::Switch> user_node = dynamic_cast<osg::Switch *>(
@@ -555,14 +575,12 @@ void OSGWidget::loadModelToScene(const ItemInfos &infos) {
 }
 
 void OSGWidget::removeModelFromScene(const ItemInfos &infos) {
-    static osg::ref_ptr<osg::Switch> user_node = dynamic_cast<osg::Switch *>(
-            NodeTreeSearch::findNodeWithName(root_node_, user_node_name));
-
     std::string node_name = infos.name.toStdString();
-    osg::ref_ptr<GeoTransform> locator = dynamic_cast<GeoTransform *>(
-            NodeTreeSearch::findNodeWithName(user_node, node_name.data()));
 
-    user_node->removeChild(locator);
+    osg::ref_ptr<osg::Node> node = NodeTreeSearch::findNodeWithName(root_node_, node_name.data());
+    osg::ref_ptr<osg::Switch> parent_node = node->getParents().front()->asSwitch();
+    parent_node->removeChild(node);
+
     BOOST_LOG_TRIVIAL(trace) << "removeModelFromScene: " << infos;
 }
 
@@ -575,14 +593,4 @@ void OSGWidget::initQueryHandler() {
     // Install a readout for feature metadata.
     ControlCanvas *canvas = ControlCanvas::getOrCreate(viewer_);
     picker->setDefaultCallback(new ReadoutCallback(canvas));
-}
-
-void OSGWidget::addCityLayer() {
-    // get the map
-    osg::ref_ptr<osgEarth::Map> map = map_node_->getMap();
-
-    // add layers
-    addBuildings(map);
-    addStreets(map);
-    addParks(map);
 }

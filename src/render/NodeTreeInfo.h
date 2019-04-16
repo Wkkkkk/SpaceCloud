@@ -86,16 +86,6 @@ namespace osgHelper {
             indent_--;
         }
 
-        void apply(osg::MatrixTransform &node) override {
-            for (int i = 0; i < indent_; i++) std::cout << "  ";
-            std::cout << "[" << indent_ + 1 << "]" << node.libraryName() << "::" << node.className() << "::"
-                      << node.getName() << std::endl;
-
-            indent_++;
-            traverse(node);
-            indent_--;
-        }
-
         void apply(osg::PositionAttitudeTransform &node) override {
             for (int i = 0; i < indent_; i++) std::cout << "  ";
             std::cout << "[" << indent_ + 1 << "]" << node.libraryName() << "::" << node.className() << "::"

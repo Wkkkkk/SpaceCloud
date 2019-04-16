@@ -75,6 +75,8 @@ public:
 
     void loadModelToScene(const ItemInfos &infos);
 
+    void loadLayerToScene(const ItemInfos &infos);
+
     void removeModelFromScene(const ItemInfos &infos);
 
     //!inherit from QOpenGLWidget
@@ -124,8 +126,6 @@ private:
 
     //! some fun
     void initQueryHandler();
-
-    void addCityLayer();
 
     //! create hud node
     osg::Camera *createHUD();
