@@ -14,14 +14,9 @@ add_custom_target(copy_ts
         ${TRANSLATION_QM} ${COPY_OUTPUT_PATH}/tr/lpd_zh.qm
         DEPENDS ${TRANSLATION_QM})
 
-add_custom_target(copy_model
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_CURRENT_SOURCE_DIR}/model/cow.osg ${COPY_OUTPUT_PATH}/model/cow.osg
-        )
-
 add_custom_target(copy_images
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_CURRENT_SOURCE_DIR}/images/reflect.rgb ${COPY_OUTPUT_PATH}/model/Images/reflect.rgb
+        ${CMAKE_CURRENT_SOURCE_DIR}/images/moon_1024x512.jpg ${COPY_OUTPUT_PATH}/moon_1024x512.jpg
         )
 
 add_custom_target(copy_manual
@@ -47,7 +42,7 @@ include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIR})
 
 add_executable(${PROJECT_NAME} ${PLATFORM} ${SOURCES_CXX})
-add_dependencies(${PROJECT_NAME} copy_ts copy_model copy_images copy_manual copy_fonts copy_earth)
+add_dependencies(${PROJECT_NAME} copy_ts copy_images copy_manual copy_fonts copy_earth)
 
 target_link_libraries(${PROJECT_NAME} core render ${Boost_LIBRARIES})
 qt5_use_modules(${PROJECT_NAME} Sql Gui Widgets OpenGL Network Concurrent)

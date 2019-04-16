@@ -118,8 +118,11 @@ private:
     //! init the camera
     void initCamera();
 
-    //! init some help node
+    //! init the axis
     void initHelperNode();
+
+    //! some fun
+    void initQueryHandler();
 
     //! create hud node
     osg::Camera *createHUD();

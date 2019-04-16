@@ -246,8 +246,9 @@ void MainWindow::readConfig() {
 }
 
 void MainWindow::saveConfig() {
-    QDir config_dir("./config");
-    if (!config_dir.exists()) config_dir.mkdir("./config");
+    QString config_dir_name_str = "./config";
+    QDir config_dir;
+    if (!config_dir.exists(config_dir_name_str)) config_dir.mkdir(config_dir_name_str);
     else {
         QFileInfoList file_infos = config_dir.entryInfoList(QDir::Files | QDir::Readable, QDir::Name);
         for (const auto &file_info : file_infos) {
@@ -256,7 +257,8 @@ void MainWindow::saveConfig() {
         }
     }
 
-    BOOST_LOG_TRIVIAL(trace) << "save config";
+    config_dir.cd(config_dir_name_str);
+    BOOST_LOG_TRIVIAL(trace) << "save config to: " << config_dir.absolutePath().toStdString();
     for (const ItemInfos &infos : all_items_) {
         QString file_path = config_dir.path() + "/" + infos.name + ".conf";
         QFile f(file_path);

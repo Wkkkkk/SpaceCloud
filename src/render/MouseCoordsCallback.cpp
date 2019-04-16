@@ -56,14 +56,10 @@ void MouseCoordsCallback::set(const osgEarth::GeoPoint &wgsPoint, osg::View *vie
 
         std::string coords_str = print2screen(wgsPoint);
 
-        size_t utm_number = static_cast<int>(wgsPoint.x() / 6) + 31;
-        std::ostringstream stringStream;
-        stringStream << "+proj=utm +zone=" << std::to_string(utm_number) << " +ellps=GRS80 +units=m";
-        std::string srs_str = stringStream.str();
-
-        const osgEarth::SpatialReference *utm_sf = osgEarth::SpatialReference::get(srs_str);
-
-        osgEarth::GeoPoint utmPoint = wgsPoint.transform(utm_sf);
+        osg::ref_ptr<const SpatialReference> srs = SpatialReference::create("wgs84");
+        osg::ref_ptr<const SpatialReference> utm = srs->createUTMFromLonLat(osgEarth::Angle(wgsPoint.x()),
+                                                                            osgEarth::Angle(wgsPoint.y()));
+        osgEarth::GeoPoint utmPoint = wgsPoint.transform(utm);
         if (utmPoint.isValid()) {
             coords_str += print2screen(utmPoint);
         }

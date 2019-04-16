@@ -43,7 +43,6 @@
 #include <osgEarthUtil/ObjectLocator>
 #include <osgEarthUtil/EarthManipulator>
 #include <osgEarthUtil/LogarithmicDepthBuffer>
-
 #include <osgEarthFeatures/FeatureModelLayer>
 #include <osgEarthDrivers/gdal/GDALOptions>
 #include <osgEarthDrivers/feature_ogr/OGRFeatureOptions>
@@ -57,6 +56,7 @@
 #include "NodeCallback.h"
 #include "NodeTreeInfo.h"
 #include "NodeTreeSearch.h"
+#include "ReadoutCallback.h"
 #include "MouseCoordsCallback.h"
 
 #include "ItemInfos.h"
@@ -66,6 +66,8 @@ using namespace osgHelper;
 using namespace osgEarth;
 using namespace osgEarth::Drivers;
 using namespace osgEarth::Features;
+using namespace osgEarth::Util;
+using namespace osgEarth::Util::Controls;
 
 OSGWidget::OSGWidget(QWidget *parent, Qt::WindowFlags f)
         : QOpenGLWidget(parent, f),
@@ -78,6 +80,7 @@ void OSGWidget::init() {
     initSceneGraph();
 //    initHelperNode();
     initCamera();
+    initQueryHandler();
 
     startTimer(1000 / 60.f);  // 60hz
 }
@@ -118,7 +121,7 @@ void OSGWidget::initSceneGraph() {
         text_node->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
         text_node->addDrawable(text_geode_);
         text_geode_->setCharacterSize(20.0);
-        text_geode_->setFont("fonts/arial.ttf");
+        text_geode_->setFont("./fonts/arial.ttf");
         text_geode_->setColor(osg::Vec4(0, 1, 1, 1));
         text_geode_->setText("Welcome");
         text_geode_->setPosition(osg::Vec3d(10, 40, 0));
@@ -559,4 +562,15 @@ void OSGWidget::removeModelFromScene(const ItemInfos &infos) {
 
     user_node->removeChild(locator);
     BOOST_LOG_TRIVIAL(trace) << "removeModelFromScene: " << infos;
+}
+
+void OSGWidget::initQueryHandler() {
+    // Install the query tool.
+    osg::ref_ptr<RTTPicker> picker = new RTTPicker();
+    viewer_->addEventHandler(picker);
+    picker->addChild(map_node_);
+
+    // Install a readout for feature metadata.
+    ControlCanvas *canvas = ControlCanvas::getOrCreate(viewer_);
+    picker->setDefaultCallback(new ReadoutCallback(canvas));
 }

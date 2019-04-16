@@ -48,7 +48,8 @@ struct ItemInfos {
         return this->name == other.name;
     }
 };
-Q_DECLARE_METATYPE(ItemInfos)
+
+Q_DECLARE_METATYPE(ItemInfos);
 
 // print to iostrem
 std::ostream &operator<<(std::ostream &output, const ItemInfos &info);

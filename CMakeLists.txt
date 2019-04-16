@@ -10,6 +10,7 @@ set(CMAKE_CXX_FLAGS "-g -Wall -DBOOST_LOG_DYN_LINK")
 #output setting for windows compatibility
 IF (WIN32)
     set(COPY_OUTPUT_PATH ${COPY_OUTPUT_PATH}/${CMAKE_BUILD_TYPE}/)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DWIN32")  # for #include<gl/gl.h> bugs
 ENDIF ()
 
 #find 3rdparty
@@ -67,7 +68,6 @@ ENDIF ()
 find_package(Qt5LinguistTools)
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Widgets REQUIRED)
-find_package(Qt5Core REQUIRED)
 find_package(Qt5Gui REQUIRED)
 find_package(Qt5Network REQUIRED)
 find_package(Boost COMPONENTS log thread date_time filesystem system REQUIRED)

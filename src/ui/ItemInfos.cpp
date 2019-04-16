@@ -21,7 +21,8 @@
 #include "ItemInfos.h"
 
 std::ostream &operator<<(std::ostream &output, const ItemInfos &info) {
-    output << info.name.toStdString() << " " << info.localtion.toString() << " " << info.file_path.first().toStdString()
+    output << info.name.toLocal8Bit().toStdString() << " " << info.localtion.toString() << " "
+           << info.file_path.first().toStdString()
            << " "
            << info.persistence;
     return output;

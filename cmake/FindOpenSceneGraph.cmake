@@ -31,7 +31,7 @@ MACRO(FIND_TARGET_LIBRARY MYLIBRARY MYLIBRARYNAME)
             )
 ENDMACRO()
 
-set(OPENSCENEGRAPH_LIB osg osgGA osgViewer osgDB osgUtil osgText osgFX)
+set(OPENSCENEGRAPH_LIB osg osgGA osgViewer osgDB osgUtil osgText osgFX OpenThreads)
 set(OPENSCENEGRAPH_LIBRARIES "")
 foreach (lib_ ${OPENSCENEGRAPH_LIB})
     FIND_TARGET_LIBRARY(${lib_}_LIBRARY ${lib_})
