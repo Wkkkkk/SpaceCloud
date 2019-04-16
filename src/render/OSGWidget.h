@@ -31,6 +31,7 @@
 //osgEarth
 #include <osgEarth/MapNode>
 #include <osgEarth/Viewpoint>
+#include <osgEarth/Layer>
 #include <osgEarthUtil/EarthManipulator>
 #include <osgText/Text>
 
@@ -123,6 +124,8 @@ private:
 
     //! some fun
     void initQueryHandler();
+
+    void addCityLayer();
 
     //! create hud node
     osg::Camera *createHUD();

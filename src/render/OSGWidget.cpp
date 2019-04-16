@@ -60,6 +60,7 @@
 #include "MouseCoordsCallback.h"
 
 #include "ItemInfos.h"
+#include "test.h"
 
 using namespace osgHelper;
 
@@ -81,6 +82,7 @@ void OSGWidget::init() {
 //    initHelperNode();
     initCamera();
     initQueryHandler();
+    addCityLayer();
 
     startTimer(1000 / 60.f);  // 60hz
 }
@@ -573,4 +575,14 @@ void OSGWidget::initQueryHandler() {
     // Install a readout for feature metadata.
     ControlCanvas *canvas = ControlCanvas::getOrCreate(viewer_);
     picker->setDefaultCallback(new ReadoutCallback(canvas));
+}
+
+void OSGWidget::addCityLayer() {
+    // get the map
+    osg::ref_ptr<osgEarth::Map> map = map_node_->getMap();
+
+    // add layers
+    addBuildings(map);
+    addStreets(map);
+    addParks(map);
 }
