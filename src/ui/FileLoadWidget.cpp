@@ -108,7 +108,7 @@ void FileLoadWidget::init() {
 void FileLoadWidget::openFileReadDialog() {
     QFileDialog dialog(this);
     dialog.setFileMode(QFileDialog::ExistingFiles);
-    dialog.setNameFilter(tr("OSG Models (*.osg *.osgb)"));
+    dialog.setNameFilter(tr("OSG Models (*.osg *.osgb *.earth *.kml)"));
     dialog.setViewMode(QFileDialog::Detail);
     QStringList fileNames;
     if (dialog.exec()) {

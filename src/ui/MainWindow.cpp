@@ -135,10 +135,13 @@ void MainWindow::createDockWidget() {
                 {tr("ShenZhen"),  ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("ShenZhen", 114.06, 22.55, 0, 0,
                                                                                         -90, 1000), false},
                 {tr("BeiJing"),   ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("BeiJing", 116.30, 39.90, 0, 0,
-                                                                                        -90, 1000), false},
+                                                                                        -90, 1000),        false},
                 {tr("Guangzhou"), ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("Guangzhou", 114.978, 22.843,
                                                                                          0, 0,
-                                                                                         -90, 1000), false},
+                                                                                         -90, 1000),       false},
+                {tr("Test"),      ItemInfos::DataType::Others, {""}, osgEarth::Viewpoint("Test", -122.0856545755255,
+                                                                                         37.42243077405461,
+                                                                                         0, 0, -90, 1000), false}
         };
 
         for (const auto &info : city_items) {
@@ -246,6 +249,7 @@ void MainWindow::loadItem(ItemInfos infos) {
     hash_map["osg"] = std::bind(&MainWindow::loadModel, this, _1);
     hash_map["osgb"] = std::bind(&MainWindow::loadModel, this, _1);
     hash_map["earth"] = std::bind(&MainWindow::loadLayer, this, _1);
+    hash_map["kml"] = std::bind(&MainWindow::loadLayer, this, _1);
 
     std::string file_ext = file_info.suffix().toStdString();
     auto func = hash_map[file_ext];
@@ -278,6 +282,20 @@ void MainWindow::loadModel(const ItemInfos &infos) {
     all_items_.push_back(infos);
 
     osgwidget_->loadModelToScene(infos);
+}
+
+void MainWindow::loadKML(const ItemInfos &infos) {
+    BOOST_LOG_TRIVIAL(trace) << "MainWindow load kml: " << infos;
+
+    QList<QTreeWidgetItem *> child_list = tree_widget_->findItems(tr("Layer"),
+                                                                  Qt::MatchContains | Qt::MatchRecursive, 0);
+    assert(child_list.size() == 1);
+
+    QTreeWidgetItem *child_item = new QTreeWidgetItem(child_list.first(), QStringList(infos.name));
+    addVariantToTreeWidgetItem(infos, child_item);
+    all_items_.push_back(infos);
+
+    osgwidget_->loadKMLToScene(infos);
 }
 
 void MainWindow::readConfig() {

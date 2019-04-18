@@ -77,6 +77,8 @@ public:
 
     void loadLayerToScene(const ItemInfos &infos);
 
+    void loadKMLToScene(const ItemInfos &infos);
+
     void removeModelFromScene(const ItemInfos &infos);
 
     //!inherit from QOpenGLWidget

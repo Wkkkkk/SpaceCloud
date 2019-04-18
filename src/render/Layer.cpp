@@ -56,24 +56,24 @@ void addBuildings(Map *map) {
     buildingStyle.setName("buildings");
 
     // Extrude the shapes into 3D buildings.
-    ExtrusionSymbol *extrusion = buildingStyle.getOrCreate<ExtrusionSymbol>();
+    osg::ref_ptr<ExtrusionSymbol> extrusion = buildingStyle.getOrCreate<ExtrusionSymbol>();
     extrusion->heightExpression() = NumericExpression("3.5 * max( [story_ht], 1 )");
     extrusion->flatten() = true;
     extrusion->wallStyleName() = "building-wall";
     extrusion->roofStyleName() = "building-roof";
 
-    PolygonSymbol *poly = buildingStyle.getOrCreate<PolygonSymbol>();
+    osg::ref_ptr<PolygonSymbol> poly = buildingStyle.getOrCreate<PolygonSymbol>();
     poly->fill()->color() = Color::White;
 
     // Clamp the buildings to the terrain.
-    AltitudeSymbol *alt = buildingStyle.getOrCreate<AltitudeSymbol>();
+    osg::ref_ptr<AltitudeSymbol> alt = buildingStyle.getOrCreate<AltitudeSymbol>();
     alt->clamping() = alt->CLAMP_TO_TERRAIN;
     alt->binding() = alt->BINDING_VERTEX;
 
     // a style for the wall textures:
     Style wallStyle;
     wallStyle.setName("building-wall");
-    SkinSymbol *wallSkin = wallStyle.getOrCreate<SkinSymbol>();
+    osg::ref_ptr<SkinSymbol> wallSkin = wallStyle.getOrCreate<SkinSymbol>();
     wallSkin->library() = "us_resources";
     wallSkin->addTag("building");
     wallSkin->randomSeed() = 1;
@@ -81,20 +81,20 @@ void addBuildings(Map *map) {
     // a style for the rooftop textures:
     Style roofStyle;
     roofStyle.setName("building-roof");
-    SkinSymbol *roofSkin = roofStyle.getOrCreate<SkinSymbol>();
+    osg::ref_ptr<SkinSymbol> roofSkin = roofStyle.getOrCreate<SkinSymbol>();
     roofSkin->library() = "us_resources";
     roofSkin->addTag("rooftop");
     roofSkin->randomSeed() = 1;
     roofSkin->isTiled() = true;
 
     // assemble a stylesheet and add our styles to it:
-    StyleSheet *styleSheet = new StyleSheet();
+    osg::ref_ptr<StyleSheet> styleSheet = new StyleSheet();
     styleSheet->addStyle(buildingStyle);
     styleSheet->addStyle(wallStyle);
     styleSheet->addStyle(roofStyle);
 
     // load a resource library that contains the building textures.
-    ResourceLibrary *reslib = new ResourceLibrary("us_resources", RESOURCE_LIB_URL);
+    osg::ref_ptr<ResourceLibrary> reslib = new ResourceLibrary("us_resources", RESOURCE_LIB_URL);
     styleSheet->addResourceLibrary(reslib);
 
     // set up a paging layout for incremental loading. The tile size factor and
@@ -104,10 +104,9 @@ void addBuildings(Map *map) {
     layout.tileSize() = 500;
     layout.addLevel(FeatureLevel(0.0f, 20000.0f, "buildings"));
 
-    FeatureModelLayer *layer = new FeatureModelLayer();
+    osg::ref_ptr<FeatureModelLayer> layer = new FeatureModelLayer();
     layer->setName("Buildings");
     layer->options().featureSource() = buildingData;
-    std::cout << "driver: " << buildingData.ogrDriver().value() << std::endl;
     layer->options().styles() = styleSheet;
     layer->options().layout() = layout;
 
@@ -134,19 +133,19 @@ void addStreets(Map *map) {
     style.setName("streets");
 
     // Render the data as translucent yellow lines that are 7.5m wide.
-    LineSymbol *line = style.getOrCreate<LineSymbol>();
+    osg::ref_ptr<LineSymbol> line = style.getOrCreate<LineSymbol>();
     line->stroke()->color() = Color(Color::Yellow, 0.5f);
     line->stroke()->width() = 7.5f;
     line->stroke()->widthUnits() = Units::METERS;
 
     // Clamp the lines to the terrain.
-    AltitudeSymbol *alt = style.getOrCreate<AltitudeSymbol>();
+    osg::ref_ptr<AltitudeSymbol> alt = style.getOrCreate<AltitudeSymbol>();
     alt->clamping() = alt->CLAMP_TO_TERRAIN;
 
     // Apply a depth offset to avoid z-fighting. The "min bias" is the minimum
     // apparent offset (towards the camera) of the geometry from its actual position.
     // The value here was chosen empirically by tweaking the "oe_doff_min_bias" uniform.
-    RenderSymbol *render = style.getOrCreate<RenderSymbol>();
+    osg::ref_ptr<RenderSymbol> render = style.getOrCreate<RenderSymbol>();
     render->depthOffset()->minBias() = 6.6f;
 
     // Set up a paging layout. The tile size factor and the visibility range combine
@@ -187,13 +186,13 @@ void addParks(Map *map) {
     model->density() = 6000.0f; // instances per sqkm
 
     // Clamp to the terrain:
-    AltitudeSymbol *alt = style.getOrCreate<AltitudeSymbol>();
+    osg::ref_ptr<AltitudeSymbol> alt = style.getOrCreate<AltitudeSymbol>();
     alt->clamping() = alt->CLAMP_TO_TERRAIN;
 
     // Since the tree model contains alpha components, we will discard any data
     // that's sufficiently transparent; this will prevent depth-sorting anomalies
     // common when rendering lots of semi-transparent objects.
-    RenderSymbol *render = style.getOrCreate<RenderSymbol>();
+    osg::ref_ptr<RenderSymbol> render = style.getOrCreate<RenderSymbol>();
     render->transparent() = true;
     render->minAlpha() = 0.15f;
 

@@ -35,6 +35,7 @@
 #include <osgGA/StateSetManipulator>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgDB/ReadFile>
+#include <osg/ProxyNode>
 
 #include <osgEarth/ImageLayer>
 #include <osgEarth/GeoTransform>
@@ -46,6 +47,7 @@
 #include <osgEarthDrivers/gdal/GDALOptions>
 #include <osgEarthDrivers/feature_ogr/OGRFeatureOptions>
 #include <osgEarthDrivers/agglite/AGGLiteOptions>
+#include <osgEarthDrivers/kml/KML>
 
 #include <boost/log/trivial.hpp>
 
@@ -540,6 +542,26 @@ void OSGWidget::loadLayerToScene(const ItemInfos &infos) {
         osg::ref_ptr<osg::Node> node = osgDB::readNodeFile(file_path.toStdString());
         node->setName(node_name);
         layer_node->addChild(node);
+    }
+
+    flyToViewPoint(infos.localtion);
+}
+
+void OSGWidget::loadKMLToScene(const ItemInfos &infos) {
+
+    static osg::ref_ptr<osg::Switch> layer_node = dynamic_cast<osg::Switch *>(
+            NodeTreeSearch::findNodeWithName(root_node_, layer_node_name));
+
+    std::string node_name = infos.name.toStdString();
+    BOOST_LOG_TRIVIAL(trace) << "loadKMLToScene: " << node_name << " at: "
+                             << infos.localtion.focalPoint()->toString();
+    for (const QString &file_path : infos.file_path) {
+        std::string kmlFile = file_path.toStdString();
+        BOOST_LOG_TRIVIAL(trace) << "loading: " << kmlFile;
+
+        osg::ref_ptr<osg::Node> kml_node = KML::load(kmlFile, map_node_);
+        kml_node->setName(node_name);
+        layer_node->addChild(kml_node);
     }
 
     flyToViewPoint(infos.localtion);

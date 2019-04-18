@@ -80,6 +80,8 @@ private:
 
     void loadModel(const ItemInfos &infos);
 
+    void loadKML(const ItemInfos &infos);
+
     //core widget
     OSGWidget *osgwidget_;
 
