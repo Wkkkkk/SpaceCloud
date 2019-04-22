@@ -23,7 +23,11 @@
 #include <atomic>
 #include <thread>
 #include <vector>
-#include <future>
+
+#define BOOST_THREAD_PROVIDES_FUTURE
+#define BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+
+#include <boost/thread/future.hpp>
 
 #include "ThreadsafeQueue.h"
 #include "FunctionWrapper.h"
@@ -44,12 +48,12 @@ public:
     ~ThreadPool();
 
     template <typename FunctionType>
-    std::future<typename std::result_of<FunctionType()>::type> submit(FunctionType f)
+    auto submit(FunctionType &&f)
     {
-        typedef typename std::result_of<FunctionType()>::type result_type;
+        using result_type = typename std::result_of<FunctionType()>::type;
 
-        std::packaged_task<result_type ()> task(std::move(f));
-        std::future<result_type> res(task.get_future());
+        boost::packaged_task<result_type> task(std::forward<FunctionType>(f));
+        boost::future<result_type> res(task.get_future());
         work_queue.push(std::move(task));
 
         return res;

@@ -56,18 +56,14 @@ BOOST_AUTO_TEST_SUITE(threadpool_test) // name of the test suite
         ThreadPool pool;
 
         auto task1 = std::bind(&calculate, 10, 5);
-        std::future<int> future1 = pool.submit(task1);
+        boost::future<int> future1 = pool.submit(task1);
 
         auto task2 = std::bind(&do_some_thing);
-        std::future<void> future2 = pool.submit(task2);
+        boost::future<void> future2 = pool.submit(task2);
 
-        std::cout << "waiting for result" << std::endl;
-
-        int result1 = future1.get();
-
-        std::cout << "get result1: " << result1 << std::endl;
-        future2.get();
-        BOOST_REQUIRE_EQUAL (15, result1); // basic test
+        future1.then([](boost::future<int> future) {
+            std::cout << "get result1: " << future.get() << std::endl;
+        });
     }
 
 BOOST_AUTO_TEST_SUITE_END()
