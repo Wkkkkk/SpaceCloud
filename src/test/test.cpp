@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_SUITE(threadpool_test) // name of the test suite
     int calculate(int a, int b) {
         std::cout << "calculate" << std::endl;
         int result = a + b;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(std::chrono::seconds(3));
 
         return result;
     }
@@ -48,11 +48,13 @@ BOOST_AUTO_TEST_SUITE(threadpool_test) // name of the test suite
 
     BOOST_AUTO_TEST_CASE(test1)
     {
+        std::cout << "test1" << std::endl;
         ThreadPool pool;
     }
 
     BOOST_AUTO_TEST_CASE(test2)
     {
+        std::cout << "test2" << std::endl;
         ThreadPool pool;
 
         auto task1 = std::bind(&calculate, 10, 5);
@@ -64,6 +66,8 @@ BOOST_AUTO_TEST_SUITE(threadpool_test) // name of the test suite
         future1.then([](boost::future<int> future) {
             std::cout << "get result1: " << future.get() << std::endl;
         });
+
+        std::cout << "test2 done" << std::endl;
     }
 
 BOOST_AUTO_TEST_SUITE_END()

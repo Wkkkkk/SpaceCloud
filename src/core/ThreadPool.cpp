@@ -22,12 +22,9 @@ using namespace core;
 
 void ThreadPool::work_thread() {
     while (!done) {
-        FunctionWrapper task;
-        if (work_queue.try_pop(task)) {
-            task();
-        } else {
-            std::this_thread::yield();
-        }
+        FunctionWrapper task = work_queue.take();
+
+        if (task.valid()) task();
     }
 }
 
@@ -42,6 +39,7 @@ ThreadPool::ThreadPool()
 
 ThreadPool::~ThreadPool() {
     done = true;
+    work_queue.free_all();
     for (auto &thread : threads) {
         if(thread.joinable())
             thread.join();

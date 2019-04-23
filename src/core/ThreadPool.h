@@ -26,7 +26,6 @@
 
 #define BOOST_THREAD_PROVIDES_FUTURE
 #define BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
-
 #include <boost/thread/future.hpp>
 
 #include "ThreadsafeQueue.h"
@@ -50,7 +49,7 @@ public:
     template <typename FunctionType>
     auto submit(FunctionType &&f)
     {
-        using result_type = typename std::result_of<FunctionType()>::type;
+        using result_type = typename std::result_of_t<FunctionType()>;
 
         boost::packaged_task<result_type> task(std::forward<FunctionType>(f));
         boost::future<result_type> res(task.get_future());

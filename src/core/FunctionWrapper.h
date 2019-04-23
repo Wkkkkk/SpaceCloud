@@ -28,6 +28,7 @@ class FunctionWrapper {
     };
 
     std::unique_ptr<impl_base> impl;
+    bool is_valid = false;
     template <typename F>
     struct impl_type : impl_base
     {
@@ -40,14 +41,19 @@ public:
     FunctionWrapper() = default;
     template <typename F>
     FunctionWrapper(F&& f)
-        : impl(new impl_type<F>(std::forward<F>(f))) {}
+            : impl(new impl_type<F>(std::forward<F>(f))),
+              is_valid(true) {}
 
     void operator() () { impl->call(); }
+
+    bool valid() const { return is_valid; }
     FunctionWrapper(FunctionWrapper&& other) noexcept
-        : impl(std::move(other.impl)) {}
+            : impl(std::move(other.impl)),
+              is_valid(true) {}
 
     FunctionWrapper&operator=(FunctionWrapper&& other) noexcept {
         impl = std::move(other.impl);
+        is_valid = other.is_valid;
         return *this;
     }
 

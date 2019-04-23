@@ -25,35 +25,56 @@
 #include <condition_variable>
 namespace core {
 
+/**
+ * a thread-safe queue plus a free function
+ */
 template <typename T>
 class ThreadsafeQueue {
 private:
+    bool free = false;
     mutable std::mutex mut;
     std::queue<T> data_queue;
     std::condition_variable data_cond;
 public:
     ThreadsafeQueue() = default;
+
+    /**
+     * @brief receive a object to queue
+     * @param generic type which has a default constructor
+     */
     void push(T data) {
         std::lock_guard<std::mutex> lk(mut);
         data_queue.push(std::move(data));
         data_cond.notify_one();
     }
 
-    void wait_and_pop(T& value) {
+    /**
+     * @brief a block function which return task_package for example
+     * @return a function-type object which could be null
+     */
+    T take() {
         std::unique_lock<std::mutex> lk(mut);
-        data_cond.wait(lk, [this]{ return !data_queue.empty();});
-        value = std::move(data_queue.front());
+        data_cond.wait(lk, [this] { return !data_queue.empty() || free; });
+
+        if (data_queue.empty()) return T();
+        T value = std::move(data_queue.front());
         data_queue.pop();
+        return value;
     }
 
-    bool try_pop(T& value) {
+    /**
+     * @brief relieve all conditional variable
+     */
+    void free_all() {
         std::lock_guard<std::mutex> lk(mut);
-        if (data_queue.empty()) return false;
-        value = std::move(data_queue.front());
-        data_queue.pop();
-        return true;
+        free = true;
+        data_cond.notify_all();
     }
 
+    /**
+     * a block query function
+     * @warning can not be called in other member funcitons
+     */
     bool empty() const {
         std::lock_guard<std::mutex> lk(mut);
         return data_queue.empty();
