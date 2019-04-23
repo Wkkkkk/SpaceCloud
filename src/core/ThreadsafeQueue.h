@@ -22,6 +22,7 @@
 
 #include <queue>
 #include <mutex>
+#include <optional>
 #include <condition_variable>
 namespace core {
 
@@ -50,13 +51,13 @@ public:
 
     /**
      * @brief a block function which return task_package for example
-     * @return a function-type object which could be null
+     * @return a optional funciton-object which could be null
      */
-    T take() {
+    std::optional<T> take() {
         std::unique_lock<std::mutex> lk(mut);
         data_cond.wait(lk, [this] { return !data_queue.empty() || free; });
 
-        if (data_queue.empty()) return T();
+        if (data_queue.empty()) return {};
         T value = std::move(data_queue.front());
         data_queue.pop();
         return value;

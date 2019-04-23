@@ -120,8 +120,8 @@ public:
 
     Singleton &operator=(const Singleton &) = delete;
 
-    static std::shared_ptr<Singleton> getInstance() {
-        static std::shared_ptr<Singleton<T>> instance(new Singleton<T>);
+    static Singleton &getInstance() {
+        static Singleton<T> instance;
         return instance;
     }
 

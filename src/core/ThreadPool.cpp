@@ -22,9 +22,9 @@ using namespace core;
 
 void ThreadPool::work_thread() {
     while (!done) {
-        FunctionWrapper task = work_queue.take();
+        std::optional<FunctionWrapper> task = work_queue.take();
 
-        if (task.valid()) task();
+        if (task) task.value()();
     }
 }
 

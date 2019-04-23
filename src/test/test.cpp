@@ -75,17 +75,17 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(singleton_test) // name of the test suite
 
     BOOST_AUTO_TEST_CASE(test3) {
-        Singleton<int>::getInstance()->update(Key<int>(0), 123);
-        Singleton<int>::getInstance()->update(Key<int>(1), 234);
-        Singleton<int>::getInstance()->print();
+        Singleton<int>::getInstance().update(Key<int>(0), 123);
+        Singleton<int>::getInstance().update(Key<int>(1), 234);
+        Singleton<int>::getInstance().print();
     }
 
     BOOST_AUTO_TEST_CASE(test4) {
-        Singleton<int>::getInstance()->update(Key<int>(0), 123);
-        int result = Singleton<int>::getInstance()->findByID(Key<int>(0));
+        Singleton<int>::getInstance().update(Key<int>(0), 123);
+        int result = Singleton<int>::getInstance().findByID(Key<int>(0));
 
-        Singleton<double>::getInstance()->update(Key<double>(0), 1.23);
-        double result2 = Singleton<double>::getInstance()->findByID(Key<double>(0));
+        Singleton<double>::getInstance().update(Key<double>(0), 1.23);
+        double result2 = Singleton<double>::getInstance().findByID(Key<double>(0));
         BOOST_REQUIRE_EQUAL (123, result); // basic test
         BOOST_REQUIRE_EQUAL (1.23, result2); // basic test
     }
