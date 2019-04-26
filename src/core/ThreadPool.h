@@ -48,6 +48,7 @@ public:
 
     template <typename FunctionType>
     auto submit(FunctionType &&f)
+    // -> boost::future<std::result_of_t<FunctionType()>>
     {
         using result_type = typename std::result_of_t<FunctionType()>;
 

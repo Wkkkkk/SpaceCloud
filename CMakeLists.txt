@@ -31,7 +31,7 @@ IF (UNIX)
             #        -Wconversion
             -Wno-unused-parameter
             #        -Wold-style-cast
-            -Woverloaded-virtual
+            #            -Woverloaded-virtual
             -Wpointer-arith
             -Wshadow
             -Wwrite-strings

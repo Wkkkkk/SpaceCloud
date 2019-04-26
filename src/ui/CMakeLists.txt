@@ -1,6 +1,6 @@
 project(${PROJECT_NAME})
 
-file(GLOB SOURCES_CXX *.cpp *.ui *.h *.qrc)
+file(GLOB SOURCES_CXX *.cpp *.ui *.h *.qrc *.rc)
 
 file(GLOB TRANSLATION_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/tr/lpd_zh.ts)

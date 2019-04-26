@@ -70,6 +70,21 @@ BOOST_AUTO_TEST_SUITE(threadpool_test) // name of the test suite
         std::cout << "test2 done" << std::endl;
     }
 
+    BOOST_AUTO_TEST_CASE(test3) {
+        std::cout << "test3" << std::endl;
+        ThreadPool pool;
+
+        auto task1 = std::bind(&calculate, 10, 5);
+        auto task2 = std::bind(&do_some_thing);
+        for (int i = 0; i < 5; ++i) {
+            auto future = pool.submit(task1);
+        }
+        for (int i = 0; i < 3; ++i) {
+            auto future = pool.submit(task2);
+        }
+        std::cout << "test2 done" << std::endl;
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(singleton_test) // name of the test suite
