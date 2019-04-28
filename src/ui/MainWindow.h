@@ -92,6 +92,7 @@ private:
     //buttons
     QAction *open_model_action_;
     QAction *read_config_action_;
+    QAction *octree_action_;
 
     QList<ItemInfos> all_items_;
 
@@ -106,6 +107,8 @@ private slots:
     void loadItem(ItemInfos infos);
 
     void readConfig();
+
+    void buildOctree();
 
     void TreeWidgetClicked(QTreeWidgetItem *, int);
     void TreeWidgetDoubleClicked(QTreeWidgetItem *, int);

@@ -20,6 +20,8 @@
 #ifndef SPACECLOUD_OCTREEBUILDER_H
 #define SPACECLOUD_OCTREEBUILDER_H
 
+#include <osg/Switch>
+
 #include <QtCore/QString>
 #include <QtCore/QFileInfo>
 #include <QtCore/QThread>
@@ -31,42 +33,30 @@ public:
 
     ~OctreeBuilder() final = default;
 
-    inline void setInputFilePath(const QFileInfo &pcd_file_path) {
-        pcd_file_path_ = pcd_file_path;
-    }
-
-    inline void setOutPutFilePath(const QFileInfo &output_file_path) {
-        output_file_path_ = output_file_path;
-    }
-
-    inline void setResolution(float resolution) {
-        resolution_ = resolution;
-    }
-
-    inline void setFilterIsolatedPoints(bool filter_isolated_points) {
-        filter_isolated_points_ = filter_isolated_points;
-    }
-
-    inline void setFilterStaticPoints(bool filter_static_points) {
-        filter_static_points_ = filter_static_points;
-    }
-
-    void build();
-
     Q_DISABLE_COPY(OctreeBuilder);
-private:
 
-    osg::Switch *getAllLeafPoints();
+    void run() override;
 
     QFileInfo pcd_file_path_;
-    QFileInfo output_file_path_;
+    QFileInfo output_file_dir_;
+    unsigned int depth_ = 5;
     float resolution_ = 128.0f;
-    bool filter_isolated_points_ = false;
+
     bool filter_static_points_ = false;
+    unsigned int seatch_k_ = 10;
+    double std_factor_ = 0.5;
+
+    bool filter_isolated_points_ = false;
+    double search_radius_ = 1.0;
+    unsigned int min_neighbors_in_radius_ = 1;
+
+    bool pca_transform_ = false;
+private:
+    osg::Switch *getAllLeafNodes();
 
 signals:
 
-    void progress_value(int);
+    void progressValue(int);
 };
 
 

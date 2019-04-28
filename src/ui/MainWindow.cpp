@@ -34,6 +34,7 @@
 #include "OSGWidget.h"
 #include "MainWindow.h"
 #include "ItemInfos.h"
+#include "OctreeWidget.h"
 #include "FileLoadWidget.h"
 
 //using namespace core;
@@ -77,6 +78,10 @@ void MainWindow::createMenu() {
     read_config_action_ = new QAction(tr("Read Config"), this);
     read_config_action_->setIcon(QIcon(":/images/setup.png"));
     connect(read_config_action_, &QAction::triggered, this, &MainWindow::readConfig);
+
+    octree_action_ = new QAction(tr("Build Octree"), this);
+    octree_action_->setIcon(QIcon(":/images/tree.png"));
+    connect(octree_action_, &QAction::triggered, this, &MainWindow::buildOctree);
 }
 
 void MainWindow::createToolBar() {
@@ -86,6 +91,9 @@ void MainWindow::createToolBar() {
     toolBar->addSeparator();
 
     toolBar->addAction(read_config_action_);
+    toolBar->addSeparator();
+
+    toolBar->addAction(octree_action_);
     toolBar->addSeparator();
 }
 
@@ -338,4 +346,10 @@ void MainWindow::saveConfig() {
 void MainWindow::closeEvent(QCloseEvent *event) {
     saveConfig();
     event->accept();
+}
+
+void MainWindow::buildOctree() {
+    auto octree_widget = new OctreeWidget;
+
+    octree_widget->exec();
 }

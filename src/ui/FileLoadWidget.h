@@ -41,7 +41,7 @@ Q_OBJECT
 public:
     explicit FileLoadWidget(QWidget *parent = nullptr);
 
-    ~FileLoadWidget() = default;
+    ~FileLoadWidget() final = default;
 
     void init();
 

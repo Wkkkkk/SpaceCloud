@@ -19,11 +19,15 @@
 
 #include <QtCore/QDir>
 
-#include <pcl/point_cloud.h>
 #include <pcl/io/pcd_io.h>
+#include <pcl/point_cloud.h>
+#include <pcl/common/pca.h>
+#include <pcl/common/transforms.h>
+#include <pcl/octree/octree_base.h>
 #include <pcl/octree/octree_search.h>
 #include <pcl/octree/octree_iterator.h>
-#include <pcl/octree/octree_base.h>
+#include <pcl/filters/radius_outlier_removal.h>
+#include <pcl/filters/statistical_outlier_removal.h>
 
 #include <osg/Vec3d>
 #include <osg/Geode>
@@ -50,9 +54,9 @@ public:
             output_dir_(std::move(output_dir)) {}
 
     virtual void apply(osg::Switch &node) {
-        std::string file_name = node.getName();
+        std::string basename = node.getName();
 
-        std::string file_path = output_dir_ + file_name;
+        std::string file_path = output_dir_ + "/" + basename + ".osg";
         osg::notify(osg::NOTICE) << "Writing out " << node.className() << " to: " << file_path << std::endl;
         osgDB::writeNodeFile(node, file_path);
 
@@ -65,7 +69,7 @@ public:
             osg::Node *child = plod.getChild(i);
             std::string file_name = plod.getFileName(i);
             if (!file_name.empty()) {
-                std::string file_path = output_dir_ + file_name;
+                std::string file_path = output_dir_ + "/" + file_name;
                 osg::notify(osg::NOTICE) << "Writing out " << child->className() << " to: " << file_path << std::endl;
                 osgDB::writeNodeFile(*child, file_path);
             }
@@ -180,24 +184,65 @@ osg::Geometry *createGeomFrom(const pcl::PointCloud<pcl::PointXYZ>::Ptr &ptr) {
     return pointsGeom.release();
 }
 
-osg::Switch *OctreeBuilder::getAllLeafPoints() {
+osg::Switch *OctreeBuilder::getAllLeafNodes() {
 //    srand ((unsigned int) time (NULL));
     std::string file_path = pcd_file_path_.filePath().toStdString();
     BOOST_LOG_TRIVIAL(trace) << "pcd file reading... " << file_path << std::endl;
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr filtered(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PCDReader reader;
     reader.read(file_path, *cloud);
-    emit progress_value(10);
+    emit progressValue(20);
+    if (filter_static_points_) {
+        BOOST_LOG_TRIVIAL(trace) << "filter static points with: " << seatch_k_ << " " << std_factor_ << std::endl;
+        StatisticalOutlierRemoval<pcl::PointXYZ> sor;
+        sor.setInputCloud(cloud);
+        sor.setMeanK(seatch_k_);
+        sor.setStddevMulThresh(std_factor_);
+        sor.filter(*filtered);
+        cloud.swap(filtered);
+        filtered->clear();
+    }
+    emit progressValue(22);
+    if (filter_isolated_points_) {
+        BOOST_LOG_TRIVIAL(trace) << "filter isolated points with: " << search_radius_ << " " << min_neighbors_in_radius_
+                                 << std::endl;
+        RadiusOutlierRemoval<pcl::PointXYZ> ror;
+        ror.setInputCloud(cloud);
+        ror.setRadiusSearch(search_radius_);
+        ror.setMinNeighborsInRadius(min_neighbors_in_radius_);
+        ror.filter(*filtered);
+        cloud.swap(filtered);
+        filtered->clear();
+    }
+    emit progressValue(24);
+    if (pca_transform_) {
+        BOOST_LOG_TRIVIAL(trace) << "do pca tranform..." << std::endl;
+        pcl::PCA<PointXYZ> pca;
+        pca.setInputCloud(cloud);
+        Eigen::Matrix3f eigenVector = pca.getEigenVectors();
+        Eigen::Vector4f mean = pca.getMean();
+//        Eigen::Vector3f eigenVal = pca.getEigenValues();
+
+        Eigen::Matrix4f trans;
+        trans.setIdentity(4, 4);
+        trans.topLeftCorner<3, 3>() = eigenVector;
+        trans.block(0, 3, 3, 1) = mean.block(0, 0, 3, 1);
+
+        pcl::transformPointCloud(*cloud, *cloud, trans);
+    }
+    emit progressValue(25);
 
     float resolution = resolution_;
     BOOST_LOG_TRIVIAL(trace) << "init octree with resolution: " << resolution << std::endl;
     pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> octree(resolution);
 
     octree.setInputCloud(cloud);
+    octree.setTreeDepth(depth_);
     octree.addPointsFromInputCloud();
     BOOST_LOG_TRIVIAL(trace) << "octree building..." << std::endl;
-    emit progress_value(20);
+    emit progressValue(30);
 
     osg::Vec3d min_p, max_p;
     octree.getBoundingBox(min_p.x(), min_p.y(), min_p.z(), max_p.x(), max_p.y(), max_p.z());
@@ -209,8 +254,8 @@ osg::Switch *OctreeBuilder::getAllLeafPoints() {
 
     for (auto it1 = octree.leaf_depth_begin(), it1_end = octree.leaf_depth_end();
          it1 != it1_end; ++it1, leafNodeCounter++) {
-        BOOST_LOG_TRIVIAL(trace) << "leat building... " << leafNodeCounter << " / " << leafCounter << std::endl;
-        int process = leafNodeCounter * 40 / leafCounter;
+        BOOST_LOG_TRIVIAL(trace) << "leaf building... " << leafNodeCounter << " / " << leafCounter << std::endl;
+        int process = leafNodeCounter * 30 / leafCounter;
         OctreeContainerPointIndices &container = it1.getLeafContainer();
 
         std::vector<int> tmpVector;
@@ -239,9 +284,9 @@ osg::Switch *OctreeBuilder::getAllLeafPoints() {
         lod->addChild(geom);
 
         root_node->addChild(lod);
-        emit progress_value(process + 20);
+        emit progressValue(process + 30);
     }
-    emit progress_value(60);
+    emit progressValue(60);
 
     return root_node.release();
 }
@@ -249,29 +294,28 @@ osg::Switch *OctreeBuilder::getAllLeafPoints() {
 
 OctreeBuilder::OctreeBuilder() = default;
 
-void OctreeBuilder::build() {
-    emit progress_value(0);
+void OctreeBuilder::run() {
+    if (!pcd_file_path_.exists() || !output_file_dir_.exists()) return;
 
+    emit progressValue(5);
     // 0~60
-    osg::ref_ptr<osg::Switch> model = getAllLeafPoints();
+    osg::ref_ptr<osg::Switch> model = getAllLeafNodes();
 
     if (model.valid()) {
         // 60~80
-        std::string basename = output_file_path_.fileName().toStdString();
-        std::string ext = output_file_path_.suffix().toStdString();
-        ConvertToPageLODVistor converter(basename, ext, true);
-        model->accept(converter);
+        std::string basename = pcd_file_path_.baseName().toStdString();
+        model->setName(basename);
 
-        BOOST_LOG_TRIVIAL(trace) << "convert to pagelod..." << basename << " / " << ext << std::endl;
+        ConvertToPageLODVistor converter(basename, ".osgb", true);
+        model->accept(converter);
         converter.convert();
-        emit progress_value(80);
+        emit progressValue(80);
 
         // 80~100
-        std::string file_dir = output_file_path_.dir().path().toStdString();
-
+        std::string file_dir = output_file_dir_.filePath().toStdString();
         BOOST_LOG_TRIVIAL(trace) << "write to dir: " << file_dir << std::endl;
         WriteOutPagedLODSubgraphsVistor woplsv(file_dir);
         model->accept(woplsv);
     }
-    emit progress_value(100);
+    emit progressValue(100);
 }
