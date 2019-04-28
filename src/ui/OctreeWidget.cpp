@@ -98,6 +98,8 @@ void OctreeWidget::init() {
             slider->setMaximum(10);
             slider->setValue(5);
             slider->setSingleStep(1);
+            slider->setTickInterval(1);
+            slider->setTickPosition(QSlider::TicksAbove);
 
             depth_spin_box_ = new QSpinBox;
             depth_spin_box_->setMinimum(2);
@@ -129,6 +131,8 @@ void OctreeWidget::init() {
             slider->setMaximum(500);
             slider->setValue(128);
             slider->setSingleStep(10);
+            slider->setTickInterval(10);
+            slider->setTickPosition(QSlider::TicksBothSides);
 
             resolution_spin_box_ = new QSpinBox;
             resolution_spin_box_->setMinimum(10);
@@ -267,7 +271,7 @@ void OctreeWidget::generate() {
     octree_builder_->std_factor_ = std_factor_box_->value();
     octree_builder_->filter_isolated_points_ = isolated_filter_box_->isChecked();
     octree_builder_->search_radius_ = search_radius_box_->cleanText().toUInt();
-    octree_builder_->min_neighbors_in_radius_ = min_neighbors_in_radius_box_->value();
+    octree_builder_->min_neighbors_in_radius_ = min_neighbors_in_radius_box_->cleanText().toUInt();
 
     connect(octree_builder_, &OctreeBuilder::progressValue, progress_bar_, &QProgressBar::setValue);
     connect(octree_builder_, &OctreeBuilder::finished, octree_builder_, &QObject::deleteLater);

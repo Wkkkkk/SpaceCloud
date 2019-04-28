@@ -11,6 +11,7 @@ set(CMAKE_CXX_FLAGS "-DBOOST_LOG_DYN_LINK")
 IF (WIN32)
     set(COPY_OUTPUT_PATH ${COPY_OUTPUT_PATH}/${CMAKE_BUILD_TYPE}/)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DWIN32")  # for #include<gl/gl.h> bugs
+    add_definitions("/EHsc") # boost::throw_exception bugs
 ENDIF ()
 
 #find 3rdparty

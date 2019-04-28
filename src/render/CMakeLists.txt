@@ -1,5 +1,7 @@
 project(render)
-
+if (WIN32)
+    set(CMAKE_CXX_STANDARD 14) # flann bug(std::random_shuffle is deprecated after c++14)
+endif ()
 find_package(OpenSceneGraph REQUIRED)
 find_package(osgEarth REQUIRED)
 find_package(PCL REQUIRED)
@@ -22,5 +24,6 @@ target_link_libraries(${PROJECT_NAME}
         ${OPENSCENEGRAPH_LIBRARIES}
         ${OSGEARTH_LIBRARIES}
         ${PCL_LIBRARIES}
+        ${Boost_LIBRARIES}
         )
 qt5_use_modules(${PROJECT_NAME} Sql Gui Widgets OpenGL Network Concurrent)
