@@ -16,8 +16,3 @@ ENDFOREACH (MODULE_DIR)
 FOREACH (MODULE_DIR ${MODULE_DIRS})
     add_subdirectory(${MODULE_DIR})
 ENDFOREACH (MODULE_DIR)
-
-if(CMAKE_BUILD_TYPE MATCHES "Debug")
-    message(STATUS "Building test......")
-    add_subdirectory(test)
-endif()

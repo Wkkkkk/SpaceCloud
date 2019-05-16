@@ -29,7 +29,7 @@
 class OctreeBuilder : public QThread {
 Q_OBJECT
 public:
-    OctreeBuilder();
+    OctreeBuilder() = default;
 
     ~OctreeBuilder() final = default;
 

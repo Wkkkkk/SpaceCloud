@@ -38,11 +38,13 @@ IF (WIN32)
     set(PLATFORM WIN32)
 ENDIF ()
 
-include_directories(${Boost_INCLUDE_DIR})
-link_directories(${Boost_LIBRARY_DIR})
-
 add_executable(${PROJECT_NAME} ${PLATFORM} ${SOURCES_CXX})
 add_dependencies(${PROJECT_NAME} copy_ts copy_images copy_manual copy_fonts copy_earth)
 
-target_link_libraries(${PROJECT_NAME} core render ${Boost_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} core render
+        ${Boost_LIBRARIES}
+        ${OPENSCENEGRAPH_LIBRARIES}
+        ${OSGEARTH_LIBRARIES}
+        ${PCL_LIBRARIES}
+        )
 qt5_use_modules(${PROJECT_NAME} Sql Gui Widgets OpenGL Network Concurrent)

@@ -31,7 +31,7 @@ find_path(OSGEARTH_INCLUDE_DIR
         )
 
 ###### libraries ######
-MACRO(FIND_TARGET_LIBRARY MYLIBRARY MYLIBRARYNAME)
+MACRO(FIND_TARGET_LIBRARY MYLIBRARYNAME MYLIBRARY)
     find_library(${MYLIBRARY}
             NAMES
             ${MYLIBRARYNAME}
@@ -48,13 +48,13 @@ MACRO(FIND_TARGET_LIBRARY MYLIBRARY MYLIBRARYNAME)
             $ENV{OSG_ROOT}
             $ENV{VCPKG_DIR}/installed/x64-windows/lib
             )
-ENDMACRO(FIND_TARGET_LIBRARY LIBRARY LIBRARYNAME)
+ENDMACRO(FIND_TARGET_LIBRARY MYLIBRARYNAME MYLIBRARY)
 
 set(OSGEARTH_LIB osgEarth;osgEarthFeatures;osgEarthUtil;osgEarthAnnotation;osgEarthSymbology)
 set(OSGEARTH_LIBRARIES "")
 foreach (lib_ ${OSGEARTH_LIB})
-    FIND_TARGET_LIBRARY(${lib_}_LIBRARY ${lib_})
-    list(APPEND OSGEARTH_LIBRARIES "${${lib_}_LIBRARY}")
+    FIND_TARGET_LIBRARY(${lib_} ${lib_}_file)
+    list(APPEND OSGEARTH_LIBRARIES "${${lib_}_file}")
 endforeach (lib_)
 
 set(OSGEARTH_FOUND FALSE)

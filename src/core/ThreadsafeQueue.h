@@ -27,7 +27,7 @@
 namespace core {
 
 /**
- * a thread-safe queue plus a free function
+ * a thread-safe block queue plus a free function
  */
 template <typename T>
 class ThreadsafeQueue {

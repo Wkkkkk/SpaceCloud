@@ -42,6 +42,7 @@ RUN apt-get update && \
     qt5-default \
     qttools5-dev-tools \
     libqt5opengl5-dev
+
 #fix pcl -lvtkproj4 bugs
 RUN ln -s /usr/lib/x86_64-linux-gnu/libvtkCommonCore-6.2.so /usr/lib/libvtkproj4.so
 

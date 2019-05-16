@@ -291,9 +291,6 @@ osg::Switch *OctreeBuilder::getAllLeafNodes() {
     return root_node.release();
 }
 
-
-OctreeBuilder::OctreeBuilder() = default;
-
 void OctreeBuilder::run() {
     if (!pcd_file_path_.exists() || !output_file_dir_.exists()) return;
 

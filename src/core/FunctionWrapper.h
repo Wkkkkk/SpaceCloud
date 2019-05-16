@@ -51,7 +51,6 @@ public:
         return *this;
     }
 
-    FunctionWrapper() = delete;
     FunctionWrapper(const FunctionWrapper&) = delete;
     FunctionWrapper(FunctionWrapper&) = delete;
     FunctionWrapper&operator=(const FunctionWrapper&) = delete;

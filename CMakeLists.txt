@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.13)
 project(SpaceCloud)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Release CACHE STRING "set build type to Release")
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(COPY_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH})
-#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-set(CMAKE_CXX_FLAGS "-DBOOST_LOG_DYN_LINK")
+#set(CMAKE_CXX_FLAGS "-DBOOST_LOG_DYN_LINK")
+set(Boost_USE_STATIC_LIBS ON)
 
 #output setting for windows compatibility
 IF (WIN32)
@@ -73,6 +73,24 @@ find_package(Qt5Core REQUIRED)
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5Gui REQUIRED)
 find_package(Qt5Network REQUIRED)
-find_package(Boost COMPONENTS log thread date_time filesystem system REQUIRED)
+
+find_package(PCL REQUIRED) # better placed before boost
+add_definitions(${PCL_DEFINITIONS})
+find_package(OpenSceneGraph REQUIRED)
+find_package(osgEarth REQUIRED)
+find_package(Boost COMPONENTS thread date_time iostreams serialization chrono atomic filesystem system log REQUIRED)
+
+include_directories(
+        ${PCL_INCLUDE_DIRS}
+        ${Boost_INCLUDE_DIRS}
+        ${OPENSCENEGRAPH_INCLUDE_DIRS}
+        ${OSGEARTH_INCLUDE_DIRS}
+)
+
+link_directories(
+        ${PCL_LIBRARY_DIRS}
+        ${Boost_LIBRARY_DIRS}
+        ${OPENSCENEGRAPH_LIBRARY_DIRS}
+)
 
 add_subdirectory(src)
