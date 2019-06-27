@@ -35,7 +35,7 @@ add_custom_target(copy_earth
         )
 
 IF (WIN32)
-    set(PLATFORM WIN32)
+    #set(PLATFORM WIN32)
 ENDIF ()
 
 add_executable(${PROJECT_NAME} ${PLATFORM} ${SOURCES_CXX})
