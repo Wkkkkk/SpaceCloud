@@ -34,16 +34,16 @@ The software is written in C++, using Qt to build the framework, using [OpenScen
 
 - Welcome
 
-  ![init](.\docs\init.png)
+  ![init](/docs/init.png)
 
 - 3D models
 
-  ![SpaceCloud2](.\docs\SpaceCloud2.png)
+  ![SpaceCloud2](/docs/SpaceCloud2.png)
 
 - buildings
 
-  ![SpaceCloud](.\docs\SpaceCloud.png)
+  ![SpaceCloud](/docs/SpaceCloud.png)
 
 - attribute editing
 
-  ![building](.\docs\building.png)
+  ![building](/docs/building.png)
