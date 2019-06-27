@@ -1,7 +1,3 @@
----
-typora-root-url: ./
----
-
 # Space Cloud(prototype)
 
 #### Description
