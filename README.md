@@ -1,3 +1,7 @@
+---
+typora-root-url: ./
+---
+
 # Space Cloud(prototype)
 
 #### Description
@@ -30,16 +34,16 @@ The software is written in C++, using Qt to build the framework, using [OpenScen
 
 - Welcome
 
-  ![init](D:\workspace\SpaceCloud\docs\init.png)
+  ![init](.\docs\init.png)
 
 - 3D models
 
-  ![SpaceCloud2](D:\workspace\SpaceCloud\docs\SpaceCloud2.png)
+  ![SpaceCloud2](.\docs\SpaceCloud2.png)
 
 - buildings
 
-  ![SpaceCloud](D:\workspace\SpaceCloud\docs\SpaceCloud.png)
+  ![SpaceCloud](.\docs\SpaceCloud.png)
 
 - attribute editing
 
-  ![building](D:\workspace\SpaceCloud\docs\building.png)
+  ![building](.\docs\building.png)
